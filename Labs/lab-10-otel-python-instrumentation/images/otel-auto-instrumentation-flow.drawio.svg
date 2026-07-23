@@ -1,95 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="700" viewBox="0 0 1480 700" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" font-family="Inter, Helvetica, Arial, sans-serif">
   <style>
     @keyframes dash-flow { to { stroke-dashoffset: 0; } }
-    .title { font-size: 32px; font-weight: 600; fill: #1a1a1a; text-anchor: middle; }
-    .box-label { font-size: 22px; font-weight: 500; fill: #1a1a1a; text-anchor: middle; }
-    .box-sub { font-size: 16px; fill: #555555; text-anchor: middle; }
-    .box-code { font-family: Menlo, Consolas, monospace; font-size: 14px; fill: #444444; text-anchor: middle; }
-    .arrow-label { font-size: 16px; fill: #333333; text-anchor: middle; }
-    .step { font-size: 14px; fill: #777777; text-anchor: middle; }
-    .note { font-size: 14px; fill: #555555; text-anchor: middle; font-style: italic; }
-    .edge { stroke: #333333; stroke-width: 2; stroke-dasharray: 8; stroke-dashoffset: -16; animation: dash-flow 600ms linear 0s infinite normal none running; fill: none; }
+    .title { font-size: 34px; font-weight: 700; fill: #172033; text-anchor: middle; }
+    .subtitle { font-size: 16px; fill: #64748b; text-anchor: middle; }
+    .card-title { font-size: 22px; font-weight: 700; fill: #172033; text-anchor: middle; }
+    .card-sub { font-size: 16px; fill: #475569; text-anchor: middle; }
+    .card-code { font: 14px Menlo, Consolas, monospace; fill: #334155; text-anchor: middle; }
+    .edge-label { font-size: 15px; font-weight: 600; fill: #475569; text-anchor: middle; }
+    .note { font-size: 14px; fill: #64748b; text-anchor: middle; font-style: italic; }
+    .edge { stroke: #64748b; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 8; stroke-dashoffset: -17; animation: dash-flow 700ms linear infinite; fill: none; }
   </style>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 Z" fill="#333333"/>
-    </marker>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#94a3b8" flood-opacity="0.18"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#64748b"/></marker>
   </defs>
 
-  <text class="title" x="740" y="50">OpenTelemetry Auto-Instrumentation Flow</text>
+  <rect width="1500" height="760" fill="#fbfdff"/>
+  <text class="title" x="750" y="52">OpenTelemetry Auto-Instrumentation Flow</text>
+  <text class="subtitle" x="750" y="82">Spans emitted without any tracing code in your application</text>
 
-  <g id="preview-app">
-    <rect x="50" y="130" width="260" height="190" rx="22" ry="22" fill="#f5f8ff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text class="box-label" x="180" y="180">Flask application</text>
-    <text class="box-sub" x="180" y="210">incoming HTTP request</text>
-    <text class="box-code" x="180" y="240">GET /hello</text>
-    <text class="step" x="180" y="290">1. Receive request</text>
+  <g id="app-card" filter="url(#shadow)">
+    <rect x="70" y="160" width="290" height="200" rx="24" fill="#eef6ff" stroke="#93c5fd" stroke-width="1.8"/>
+    <text class="card-title" x="215" y="220">Flask application</text>
+    <text class="card-sub" x="215" y="252">incoming HTTP request</text>
+    <text class="card-code" x="215" y="295">GET /hello</text>
+    <text class="card-sub" x="215" y="335" font-style="italic">Receive request</text>
   </g>
 
-  <g id="preview-wrapper">
-    <rect x="480" y="130" width="300" height="190" rx="22" ry="22" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text class="box-label" x="630" y="180">Instrumentation wrapper</text>
-    <text class="box-sub" x="630" y="210">patches Flask at startup</text>
-    <text class="box-code" x="630" y="240">opentelemetry-instrument</text>
-    <text class="step" x="630" y="290">2. Create server span</text>
+  <g id="wrapper-card" filter="url(#shadow)">
+    <rect x="490" y="160" width="290" height="200" rx="24" fill="#f4f0ff" stroke="#c4b5fd" stroke-width="1.8"/>
+    <text class="card-title" x="635" y="220">Instrumentation wrapper</text>
+    <text class="card-sub" x="635" y="252">patches Flask at startup</text>
+    <text class="card-code" x="635" y="295">opentelemetry-instrument</text>
+    <text class="card-sub" x="635" y="335" font-style="italic">Create server span</text>
   </g>
 
-  <g id="preview-exporter">
-    <rect x="950" y="130" width="280" height="190" rx="22" ry="22" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text class="box-label" x="1090" y="180">OTLP HTTP exporter</text>
-    <text class="box-sub" x="1090" y="210">batches completed spans</text>
-    <text class="box-code" x="1090" y="240">POST /v1/traces</text>
-    <text class="step" x="1090" y="290">3. Export span</text>
+  <g id="exporter-card" filter="url(#shadow)">
+    <rect x="910" y="160" width="290" height="200" rx="24" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.8"/>
+    <text class="card-title" x="1055" y="220">OTLP HTTP exporter</text>
+    <text class="card-sub" x="1055" y="252">batches completed spans</text>
+    <text class="card-code" x="1055" y="295">POST /v1/traces</text>
+    <text class="card-sub" x="1055" y="335" font-style="italic">Export span</text>
   </g>
 
-  <g id="preview-tempo">
-    <rect x="950" y="430" width="280" height="190" rx="22" ry="22" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text class="box-label" x="1090" y="480">Tempo</text>
-    <text class="box-sub" x="1090" y="510">OTLP receiver and storage</text>
-    <text class="box-code" x="1090" y="540">endpoint :4318</text>
-    <text class="step" x="1090" y="590">4. Index and persist</text>
+  <g id="tempo-card" filter="url(#shadow)">
+    <rect x="910" y="500" width="290" height="200" rx="24" fill="#fdf4ff" stroke="#f0abfc" stroke-width="1.8"/>
+    <text class="card-title" x="1055" y="560">Tempo</text>
+    <text class="card-sub" x="1055" y="592">OTLP receiver and storage</text>
+    <text class="card-code" x="1055" y="635">endpoint :4318</text>
+    <text class="card-sub" x="1055" y="675" font-style="italic">Index and persist</text>
   </g>
 
-  <g id="preview-grafana">
-    <rect x="480" y="430" width="300" height="190" rx="22" ry="22" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text class="box-label" x="630" y="480">Grafana Explore</text>
-    <text class="box-sub" x="630" y="510">Tempo datasource</text>
-    <text class="box-code" x="630" y="540">service.name = my-api</text>
-    <text class="step" x="630" y="590">5. Find and inspect trace</text>
+  <g id="grafana-card" filter="url(#shadow)">
+    <rect x="490" y="500" width="290" height="200" rx="24" fill="#fff6e8" stroke="#fdba74" stroke-width="1.8"/>
+    <text class="card-title" x="635" y="560">Grafana Explore</text>
+    <text class="card-sub" x="635" y="592">Tempo datasource</text>
+    <text class="card-code" x="635" y="635">service.name = my-api</text>
+    <text class="card-sub" x="635" y="675" font-style="italic">Find and inspect trace</text>
   </g>
 
-  <line class="edge" x1="310" y1="225" x2="472" y2="225" marker-end="url(#arrow)"/>
-  <text class="arrow-label" x="391" y="213">import hook</text>
+  <!-- Arrow 1: app → wrapper -->
+  <line class="edge" x1="360" y1="260" x2="482" y2="260" marker-end="url(#arrow)"/>
+  <rect x="375" y="234" width="92" height="27" rx="13" fill="#fbfdff"/>
+  <text class="edge-label" x="421" y="253">import hook</text>
 
-  <line class="edge" x1="780" y1="225" x2="942" y2="225" marker-end="url(#arrow)"/>
-  <text class="arrow-label" x="861" y="213">span batch</text>
+  <!-- Arrow 2: wrapper → exporter -->
+  <line class="edge" x1="780" y1="260" x2="902" y2="260" marker-end="url(#arrow)"/>
+  <rect x="798" y="234" width="86" height="27" rx="13" fill="#fbfdff"/>
+  <text class="edge-label" x="841" y="253">span batch</text>
 
-  <line class="edge" x1="1090" y1="320" x2="1090" y2="422" marker-end="url(#arrow)"/>
-  <text class="arrow-label" x="1160" y="376">http/protobuf</text>
+  <!-- Arrow 3: exporter → tempo (vertical drop) -->
+  <line class="edge" x1="1055" y1="360" x2="1055" y2="492" marker-end="url(#arrow)"/>
+  <rect x="1075" y="408" width="118" height="27" rx="13" fill="#fbfdff"/>
+  <text class="edge-label" x="1134" y="427">http/protobuf</text>
 
-  <line class="edge" x1="950" y1="525" x2="788" y2="525" marker-end="url(#arrow)"/>
-  <text class="arrow-label" x="869" y="513">query :3200</text>
+  <!-- Arrow 4: tempo → grafana (right to left along bottom row) -->
+  <line class="edge" x1="910" y1="600" x2="788" y2="600" marker-end="url(#arrow)"/>
+  <rect x="804" y="574" width="92" height="27" rx="13" fill="#fbfdff"/>
+  <text class="edge-label" x="850" y="593">query :3200</text>
 
-  <text class="note" x="740" y="675">The wrapper and exporter are configured through standard OTEL_* environment variables—no application tracing code is required.</text>
+  <text class="note" x="750" y="738">The wrapper and exporter are configured through standard OTEL_* environment variables — no application tracing code is required.</text>
 
   <mxfile host="app.diagrams.net" type="device">
-    <diagram name="OTel Flow" id="otel-1">
-      <mxGraphModel dx="1480" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="700" math="0" shadow="0">
+    <diagram name="OTel Flow" id="lab10-otel-flow">
+      <mxGraphModel dx="1500" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="760" math="0" shadow="1">
         <root>
-          <mxCell id="0"/>
-          <mxCell id="1" parent="0"/>
-          <mxCell id="2" value="OpenTelemetry Auto-Instrumentation Flow" style="text;html=1;align=center;verticalAlign=middle;fontSize=32;fontColor=#1a1a1a;" vertex="1" parent="1"><mxGeometry x="440" y="20" width="600" height="50" as="geometry"/></mxCell>
-          <mxCell id="3" value="Flask application&#10;incoming HTTP request&#10;&#10;GET /hello&#10;&#10;1. Receive request" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f8ff;strokeColor=#1a1a1a;strokeWidth=1.5;fontSize=16;align=center;verticalAlign=middle;arcSize=10;" vertex="1" parent="1"><mxGeometry x="50" y="130" width="260" height="190" as="geometry"/></mxCell>
-          <mxCell id="4" value="Instrumentation wrapper&#10;patches Flask at startup&#10;&#10;opentelemetry-instrument&#10;&#10;2. Create server span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=1.5;fontSize=16;align=center;verticalAlign=middle;arcSize=10;" vertex="1" parent="1"><mxGeometry x="480" y="130" width="300" height="190" as="geometry"/></mxCell>
-          <mxCell id="5" value="OTLP HTTP exporter&#10;batches completed spans&#10;&#10;POST /v1/traces&#10;&#10;3. Export span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=1.5;fontSize=16;align=center;verticalAlign=middle;arcSize=10;" vertex="1" parent="1"><mxGeometry x="950" y="130" width="280" height="190" as="geometry"/></mxCell>
-          <mxCell id="6" value="Tempo&#10;OTLP receiver and storage&#10;&#10;endpoint :4318&#10;&#10;4. Index and persist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=1.5;fontSize=16;align=center;verticalAlign=middle;arcSize=10;" vertex="1" parent="1"><mxGeometry x="950" y="430" width="280" height="190" as="geometry"/></mxCell>
-          <mxCell id="7" value="Grafana Explore&#10;Tempo datasource&#10;&#10;service.name = my-api&#10;&#10;5. Find and inspect trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=1.5;fontSize=16;align=center;verticalAlign=middle;arcSize=10;" vertex="1" parent="1"><mxGeometry x="480" y="430" width="300" height="190" as="geometry"/></mxCell>
-          <mxCell id="8" value="import hook" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="9" value="span batch" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="10" value="http/protobuf" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="11" value="query :3200" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="6" target="7"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="12" value="The wrapper and exporter are configured through standard OTEL_* environment variables—no application tracing code is required." style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#555555;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="180" y="650" width="1120" height="30" as="geometry"/></mxCell>
+          <mxCell id="0"/><mxCell id="1" parent="0"/>
+          <mxCell id="title" value="OpenTelemetry Auto-Instrumentation Flow" style="text;html=1;align=center;verticalAlign=middle;fontSize=34;fontStyle=1;fontColor=#172033;" vertex="1" parent="1"><mxGeometry x="370" y="22" width="760" height="46" as="geometry"/></mxCell>
+          <mxCell id="subtitle" value="Spans emitted without any tracing code in your application" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="350" y="66" width="800" height="28" as="geometry"/></mxCell>
+          <mxCell id="app" value="Flask application&#10;&#10;incoming HTTP request&#10;&#10;GET /hello&#10;&#10;Receive request" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef6ff;strokeColor=#93c5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="70" y="160" width="290" height="200" as="geometry"/></mxCell>
+          <mxCell id="wrapper" value="Instrumentation wrapper&#10;&#10;patches Flask at startup&#10;&#10;opentelemetry-instrument&#10;&#10;Create server span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="490" y="160" width="290" height="200" as="geometry"/></mxCell>
+          <mxCell id="exporter" value="OTLP HTTP exporter&#10;&#10;batches completed spans&#10;&#10;POST /v1/traces&#10;&#10;Export span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfeff;strokeColor=#67e8f9;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="910" y="160" width="290" height="200" as="geometry"/></mxCell>
+          <mxCell id="tempo" value="Tempo&#10;&#10;OTLP receiver and storage&#10;&#10;endpoint :4318&#10;&#10;Index and persist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdf4ff;strokeColor=#f0abfc;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="910" y="500" width="290" height="200" as="geometry"/></mxCell>
+          <mxCell id="grafana" value="Grafana Explore&#10;&#10;Tempo datasource&#10;&#10;service.name = my-api&#10;&#10;Find and inspect trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff6e8;strokeColor=#fdba74;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="490" y="500" width="290" height="200" as="geometry"/></mxCell>
+          <mxCell id="hook" value="import hook" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="app" target="wrapper"><mxGeometry relative="1" as="geometry"/></mxCell>
+          <mxCell id="batch" value="span batch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="wrapper" target="exporter"><mxGeometry relative="1" as="geometry"/></mxCell>
+          <mxCell id="proto" value="http/protobuf" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="exporter" target="tempo"><mxGeometry relative="1" as="geometry"/></mxCell>
+          <mxCell id="query" value="query :3200" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="tempo" target="grafana"><mxGeometry relative="1" as="geometry"/></mxCell>
+          <mxCell id="note" value="The wrapper and exporter are configured through standard OTEL_* environment variables — no application tracing code is required." style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#64748b;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="180" y="718" width="1140" height="28" as="geometry"/></mxCell>
         </root>
       </mxGraphModel>
     </diagram>
