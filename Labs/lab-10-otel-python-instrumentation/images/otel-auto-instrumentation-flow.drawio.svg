@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1380" height="760" viewBox="0 0 1380 760" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    @keyframes dash-flow {
+      to { stroke-dashoffset: 0; }
+    }
+    .title { font-size: 26px; font-weight: 700; fill: #000000; text-anchor: middle; }
+    .label { font-size: 18px; font-weight: 600; fill: #000000; text-anchor: middle; }
+    .sub { font-size: 14px; fill: #444444; text-anchor: middle; }
+    .step { font-size: 13px; font-style: italic; fill: #555555; text-anchor: middle; }
+    .arrow-label { font-size: 13px; fill: #555555; text-anchor: middle; }
+    .note { font-size: 13px; fill: #555555; text-anchor: middle; }
+    .edge {
+      stroke: #333333;
+      stroke-width: 2;
+      stroke-dasharray: 8;
+      stroke-dashoffset: -16;
+      animation: dash-flow 600ms linear 0s infinite normal none running;
+      fill: none;
+    }
+  </style>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#333333"/>
+    </marker>
+  </defs>
+
+  <text class="title" x="690" y="40">OpenTelemetry Auto-Instrumentation Flow</text>
+
+  <!-- TOP ROW: Flask or FastAPI (highlighted) -->
+  <g id="preview-app">
+    <rect x="40" y="120" width="240" height="180" rx="16" ry="16" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+    <text class="label" x="160" y="160">Flask or FastAPI</text>
+    <text class="sub" x="160" y="190">application</text>
+    <text class="sub" x="160" y="215">route /hello</text>
+    <text class="step" x="160" y="270">1. Receive request</text>
+  </g>
+
+  <!-- TOP ROW: opentelemetry-instrument wrapper -->
+  <g id="preview-wrap">
+    <rect x="440" y="120" width="280" height="180" rx="16" ry="16" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+    <text class="label" x="580" y="160">opentelemetry-instrument</text>
+    <text class="sub" x="580" y="190">wrapper</text>
+    <text class="sub" x="580" y="215">patches Flask imports</text>
+    <text class="step" x="580" y="270">2. Create span</text>
+  </g>
+
+  <!-- TOP ROW: OTLP HTTP exporter -->
+  <g id="preview-exp">
+    <rect x="860" y="120" width="280" height="180" rx="16" ry="16" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+    <text class="label" x="1000" y="160">OTLP HTTP exporter</text>
+    <text class="sub" x="1000" y="190">http/protobuf</text>
+    <text class="sub" x="1000" y="215">POST /v1/traces</text>
+    <text class="step" x="1000" y="270">3. Ship span</text>
+  </g>
+
+  <!-- BOTTOM ROW: Tempo (under exporter) -->
+  <g id="preview-tempo">
+    <rect x="860" y="480" width="280" height="180" rx="16" ry="16" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+    <text class="label" x="1000" y="520">Tempo</text>
+    <text class="sub" x="1000" y="550">OTLP receiver</text>
+    <text class="sub" x="1000" y="575">endpoint :4318</text>
+    <text class="step" x="1000" y="630">4. Index and store</text>
+  </g>
+
+  <!-- BOTTOM ROW: Grafana Explore (left of Tempo) -->
+  <g id="preview-explore">
+    <rect x="440" y="480" width="280" height="180" rx="16" ry="16" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+    <text class="label" x="580" y="520">Grafana</text>
+    <text class="sub" x="580" y="550">Explore</text>
+    <text class="sub" x="580" y="575">service: my-api</text>
+    <text class="step" x="580" y="630">5. View trace</text>
+  </g>
+
+  <!-- Animated arrows: TOP ROW (left to right) -->
+  <!-- "import hook" between Flask (ends x=280) and wrapper (starts x=440). 160px corridor. -->
+  <line class="edge" x1="280" y1="210" x2="434" y2="210" marker-end="url(#arrow)"/>
+  <text class="arrow-label" x="357" y="200">import hook</text>
+
+  <!-- "span batch" between wrapper (ends x=720) and exporter (starts x=860). 140px corridor. -->
+  <line class="edge" x1="720" y1="210" x2="854" y2="210" marker-end="url(#arrow)"/>
+  <text class="arrow-label" x="787" y="200">span batch</text>
+
+  <!-- VERTICAL DROP: exporter (bottom y=300) → Tempo (top y=480). 180px corridor. -->
+  <line class="edge" x1="1000" y1="300" x2="1000" y2="474" marker-end="url(#arrow)"/>
+  <text class="arrow-label" x="1010" y="395">http/protobuf</text>
+
+  <!-- "turn" hint to the right of the vertical drop -->
+  <text class="note" x="1170" y="395">turn</text>
+
+  <!-- BOTTOM ROW (right to left): Tempo (starts x=860) → Grafana (ends x=720). 140px corridor. -->
+  <line class="edge" x1="860" y1="570" x2="726" y2="570" marker-end="url(#arrow)"/>
+  <text class="arrow-label" x="793" y="560">query :3200</text>
+
+  <!-- Footer note, indented from edges -->
+  <text class="note" x="690" y="720">Environment variables OTEL_SERVICE_NAME, OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_TRACES_EXPORTER, and OTEL_EXPORTER_OTLP_PROTOCOL drive the wrapper configuration.</text>
+
+  <!-- draw.io editable model -->
+  <mxfile host="app.diagrams.net" type="device">
+    <diagram name="OTel Flow" id="otel-1">
+      <mxGraphModel dx="1380" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1380" pageHeight="760" math="0" shadow="0">
+        <root>
+          <mxCell id="0"/>
+          <mxCell id="1" parent="0"/>
+
+          <mxCell id="2" value="&lt;b&gt;OpenTelemetry Auto-Instrumentation Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;" vertex="1" parent="1">
+            <mxGeometry x="490" y="20" width="400" height="40" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="3" value="&lt;b&gt;Flask or FastAPI&lt;/b&gt;&lt;br&gt;application&lt;br&gt;route /hello&lt;br&gt;&lt;i&gt;1. Receive request&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="40" y="120" width="240" height="180" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="4" value="&lt;b&gt;opentelemetry-instrument&lt;/b&gt;&lt;br&gt;wrapper&lt;br&gt;patches Flask imports&lt;br&gt;&lt;i&gt;2. Create span&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="440" y="120" width="280" height="180" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="5" value="&lt;b&gt;OTLP HTTP exporter&lt;/b&gt;&lt;br&gt;http/protobuf&lt;br&gt;POST /v1/traces&lt;br&gt;&lt;i&gt;3. Ship span&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="860" y="120" width="280" height="180" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="6" value="&lt;b&gt;Tempo&lt;/b&gt;&lt;br&gt;OTLP receiver&lt;br&gt;endpoint :4318&lt;br&gt;&lt;i&gt;4. Index and store&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="860" y="480" width="280" height="180" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="7" value="&lt;b&gt;Grafana&lt;/b&gt;&lt;br&gt;Explore&lt;br&gt;service: my-api&lt;br&gt;&lt;i&gt;5. View trace&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="440" y="480" width="280" height="180" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="8" value="turn" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#888888;fontStyle=2;" vertex="1" parent="1">
+            <mxGeometry x="1140" y="385" width="80" height="20" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="9" value="import hook" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="3" target="4">
+            <mxGeometry relative="1" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="10" value="span batch" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="4" target="5">
+            <mxGeometry relative="1" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="11" value="http/protobuf" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="5" target="6">
+            <mxGeometry relative="1" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="12" value="query :3200" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="6" target="7">
+            <mxGeometry relative="1" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="13" value="Environment variables OTEL_SERVICE_NAME, OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_TRACES_EXPORTER, and OTEL_EXPORTER_OTLP_PROTOCOL drive the wrapper configuration." style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontColor=#555555;" vertex="1" parent="1">
+            <mxGeometry x="80" y="705" width="1220" height="30" as="geometry"/>
+          </mxCell>
+        </root>
+      </mxGraphModel>
+    </diagram>
+  </mxfile>
+</svg>
