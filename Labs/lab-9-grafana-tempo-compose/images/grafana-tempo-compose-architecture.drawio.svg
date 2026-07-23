@@ -1,125 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1380" height="660" viewBox="0 0 1380 660" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="720" viewBox="0 0 1500 720" font-family="Inter, Helvetica, Arial, sans-serif">
   <style>
-    @keyframes dash-flow {
-      to { stroke-dashoffset: 0; }
-    }
-    .title { font-size: 32px; font-weight: 600; fill: #1a1a1a; text-anchor: middle; }
-    .box-label { font-size: 22px; font-weight: 500; fill: #1a1a1a; text-anchor: middle; }
-    .box-sub { font-size: 16px; fill: #555555; text-anchor: middle; }
-    .arrow-label { font-size: 16px; fill: #333333; text-anchor: middle; }
-    .step { font-size: 14px; fill: #777777; text-anchor: middle; }
-    .note { font-size: 14px; fill: #555555; text-anchor: middle; font-style: italic; }
-    .edge {
-      stroke: #333333;
-      stroke-width: 2;
-      stroke-dasharray: 8;
-      stroke-dashoffset: -16;
-      animation: dash-flow 600ms linear 0s infinite normal none running;
-      fill: none;
-    }
+    @keyframes dash-flow { to { stroke-dashoffset: 0; } }
+    .title { font-size: 34px; font-weight: 700; fill: #172033; text-anchor: middle; }
+    .subtitle { font-size: 16px; fill: #64748b; text-anchor: middle; }
+    .card-title { font-size: 22px; font-weight: 700; fill: #172033; text-anchor: middle; }
+    .card-sub { font-size: 16px; fill: #475569; text-anchor: middle; }
+    .card-code { font: 14px Menlo, Consolas, monospace; fill: #334155; text-anchor: middle; }
+    .edge-label { font-size: 15px; font-weight: 600; fill: #475569; text-anchor: middle; }
+    .note { font-size: 14px; fill: #64748b; text-anchor: middle; font-style: italic; }
+    .edge { stroke: #64748b; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 8; stroke-dashoffset: -17; animation: dash-flow 700ms linear infinite; fill: none; }
   </style>
-
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 Z" fill="#333333"/>
-    </marker>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#94a3b8" flood-opacity="0.18"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#64748b"/></marker>
   </defs>
 
-  <text class="title" x="690" y="50">Grafana + Tempo Compose Stack: Trace Flow</text>
+  <rect width="1500" height="720" fill="#fbfdff"/>
+  <text class="title" x="750" y="52">Grafana + Tempo Trace Architecture</text>
+  <text class="subtitle" x="750" y="82">From OTLP ingestion to trace exploration</text>
 
-  <!-- TOP ROW: curl client (light highlight) -->
-  <g id="preview-curl">
-    <rect x="60" y="130" width="240" height="170" rx="22" ry="22" fill="#f5f8ff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text class="box-label" x="180" y="190">curl client</text>
-    <text class="box-sub" x="180" y="220">OTLP HTTP</text>
-    <text class="box-sub" x="180" y="245">POST /v1/traces</text>
-    <text class="step" x="180" y="280">1. Send test span</text>
+  <g id="curl-card" filter="url(#shadow)">
+    <rect x="70" y="155" width="270" height="190" rx="24" fill="#eef6ff" stroke="#93c5fd" stroke-width="1.8"/>
+    <text class="card-title" x="205" y="215">curl client</text>
+    <text class="card-sub" x="205" y="247">OTLP HTTP request</text>
+    <text class="card-code" x="205" y="290">POST /v1/traces</text>
+    <text class="card-sub" x="205" y="325" font-style="italic">Send a test span</text>
   </g>
 
-  <!-- TOP ROW: Tempo OTLP receiver -->
-  <g id="preview-tempo-recv">
-    <rect x="450" y="130" width="240" height="170" rx="22" ry="22" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text class="box-label" x="570" y="190">Tempo</text>
-    <text class="box-sub" x="570" y="220">OTLP receiver</text>
-    <text class="box-sub" x="570" y="245">endpoint :4318</text>
-    <text class="step" x="570" y="280">2. Receive and index</text>
+  <g id="receiver-card" filter="url(#shadow)">
+    <rect x="485" y="155" width="270" height="190" rx="24" fill="#f4f0ff" stroke="#c4b5fd" stroke-width="1.8"/>
+    <text class="card-title" x="620" y="215">Tempo receiver</text>
+    <text class="card-sub" x="620" y="247">OTLP HTTP ingestion</text>
+    <text class="card-code" x="620" y="290">0.0.0.0:4318</text>
+    <text class="card-sub" x="620" y="325" font-style="italic">Validate and ingest</text>
   </g>
 
-  <!-- TOP ROW: Tempo trace storage -->
-  <g id="preview-tempo-store">
-    <rect x="840" y="130" width="240" height="170" rx="22" ry="22" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text class="box-label" x="960" y="190">Tempo</text>
-    <text class="box-sub" x="960" y="220">trace storage</text>
-    <text class="box-sub" x="960" y="245">backend: local</text>
-    <text class="step" x="960" y="280">3. Persist spans</text>
+  <g id="storage-card" filter="url(#shadow)">
+    <rect x="900" y="155" width="270" height="190" rx="24" fill="#f4f0ff" stroke="#c4b5fd" stroke-width="1.8"/>
+    <text class="card-title" x="1035" y="215">Tempo storage</text>
+    <text class="card-sub" x="1035" y="247">Local trace backend</text>
+    <text class="card-code" x="1035" y="290">/var/tempo/traces</text>
+    <text class="card-sub" x="1035" y="325" font-style="italic">Persist spans</text>
   </g>
 
-  <!-- BOTTOM ROW: Grafana (centered under the right side of the top row) -->
-  <g id="preview-grafana">
-    <rect x="600" y="400" width="240" height="170" rx="22" ry="22" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text class="box-label" x="720" y="460">Grafana</text>
-    <text class="box-sub" x="720" y="490">Explore view</text>
-    <text class="box-sub" x="720" y="515">datasource: Tempo</text>
-    <text class="step" x="720" y="550">4. Query by trace ID</text>
+  <g id="grafana-card" filter="url(#shadow)">
+    <rect x="900" y="465" width="270" height="190" rx="24" fill="#fff6e8" stroke="#fdba74" stroke-width="1.8"/>
+    <text class="card-title" x="1035" y="525">Grafana Explore</text>
+    <text class="card-sub" x="1035" y="557">Tempo datasource</text>
+    <text class="card-code" x="1035" y="600">query by trace ID</text>
+    <text class="card-sub" x="1035" y="635" font-style="italic">Inspect the trace</text>
   </g>
 
-  <!-- Animated arrows: TOP ROW (left to right) -->
-  <line class="edge" x1="300" y1="215" x2="442" y2="215" marker-end="url(#arrow)"/>
-  <text class="arrow-label" x="370" y="200">host :4318</text>
+  <line class="edge" x1="340" y1="250" x2="477" y2="250" marker-end="url(#arrow)"/>
+  <rect x="367" y="218" width="84" height="25" rx="12" fill="#fbfdff"/>
+  <text class="edge-label" x="409" y="236">port 4318</text>
 
-  <line class="edge" x1="690" y1="215" x2="832" y2="215" marker-end="url(#arrow)"/>
-  <text class="arrow-label" x="760" y="200">write</text>
+  <line class="edge" x1="755" y1="250" x2="892" y2="250" marker-end="url(#arrow)"/>
+  <rect x="785" y="218" width="76" height="25" rx="12" fill="#fbfdff"/>
+  <text class="edge-label" x="823" y="236">write</text>
 
-  <!-- L-shape turn: down then left from Tempo storage to Grafana -->
-  <path class="edge" d="M 900 300 L 900 360 L 720 360 L 720 392" marker-end="url(#arrow)"/>
-  <text class="arrow-label" x="930" y="350">query :3200</text>
+  <path class="edge" d="M 1170 250 L 1290 250 L 1290 560 L 1178 560" marker-end="url(#arrow)"/>
+  <rect x="1244" y="385" width="92" height="27" rx="13" fill="#fbfdff"/>
+  <text class="edge-label" x="1290" y="404">query :3200</text>
 
-  <text class="note" x="690" y="630">All services run inside one Docker Compose network. Grafana reaches Tempo through the service hostname "tempo".</text>
+  <text class="note" x="750" y="696">Grafana resolves Tempo through Docker Compose DNS using the service hostname “tempo”.</text>
 
-  <!-- draw.io editable model -->
   <mxfile host="app.diagrams.net" type="device">
-    <diagram name="Architecture" id="arch-1">
-      <mxGraphModel dx="1380" dy="660" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1380" pageHeight="660" math="0" shadow="0">
+    <diagram name="Trace Architecture" id="lab9-architecture">
+      <mxGraphModel dx="1500" dy="720" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="720" math="0" shadow="1">
         <root>
-          <mxCell id="0"/>
-          <mxCell id="1" parent="0"/>
-
-          <mxCell id="2" value="Grafana + Tempo Compose Stack: Trace Flow" style="text;html=1;align=center;verticalAlign=middle;fontSize=32;fontColor=#1a1a1a;" vertex="1" parent="1">
-            <mxGeometry x="440" y="20" width="500" height="50" as="geometry"/>
-          </mxCell>
-
-          <mxCell id="3" value="curl client&#10;OTLP HTTP&#10;POST /v1/traces&#10;&#10;1. Send test span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f8ff;strokeColor=#1a1a1a;strokeWidth=1.5;fontSize=18;align=center;verticalAlign=middle;arcSize=10;" vertex="1" parent="1">
-            <mxGeometry x="60" y="130" width="240" height="170" as="geometry"/>
-          </mxCell>
-
-          <mxCell id="4" value="Tempo&#10;OTLP receiver&#10;endpoint :4318&#10;&#10;2. Receive and index" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=1.5;fontSize=18;align=center;verticalAlign=middle;arcSize=10;" vertex="1" parent="1">
-            <mxGeometry x="450" y="130" width="240" height="170" as="geometry"/>
-          </mxCell>
-
-          <mxCell id="5" value="Tempo&#10;trace storage&#10;backend: local&#10;&#10;3. Persist spans" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=1.5;fontSize=18;align=center;verticalAlign=middle;arcSize=10;" vertex="1" parent="1">
-            <mxGeometry x="840" y="130" width="240" height="170" as="geometry"/>
-          </mxCell>
-
-          <mxCell id="6" value="Grafana&#10;Explore view&#10;datasource: Tempo&#10;&#10;4. Query by trace ID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=1.5;fontSize=18;align=center;verticalAlign=middle;arcSize=10;" vertex="1" parent="1">
-            <mxGeometry x="600" y="400" width="240" height="170" as="geometry"/>
-          </mxCell>
-
-          <mxCell id="7" value="host :4318" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="3" target="4">
-            <mxGeometry relative="1" as="geometry"/>
-          </mxCell>
-
-          <mxCell id="8" value="write" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="4" target="5">
-            <mxGeometry relative="1" as="geometry"/>
-          </mxCell>
-
-          <mxCell id="9" value="query :3200" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;edgeStyle=orthogonalEdgeStyle;exitX=0.25;exitY=1;entryX=0.75;entryY=0;" edge="1" parent="1" source="5" target="6">
-            <mxGeometry relative="1" as="geometry"/>
-          </mxCell>
-
-          <mxCell id="10" value="All services run inside one Docker Compose network. Grafana reaches Tempo through the service hostname tempo." style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#555555;fontStyle=2;" vertex="1" parent="1">
-            <mxGeometry x="200" y="605" width="980" height="30" as="geometry"/>
-          </mxCell>
+          <mxCell id="0"/><mxCell id="1" parent="0"/>
+          <mxCell id="title" value="Grafana + Tempo Trace Architecture" style="text;html=1;align=center;verticalAlign=middle;fontSize=34;fontStyle=1;fontColor=#172033;" vertex="1" parent="1"><mxGeometry x="430" y="22" width="640" height="46" as="geometry"/></mxCell>
+          <mxCell id="subtitle" value="From OTLP ingestion to trace exploration" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="500" y="66" width="500" height="28" as="geometry"/></mxCell>
+          <mxCell id="curl" value="curl client&#10;&#10;OTLP HTTP request&#10;&#10;POST /v1/traces&#10;&#10;Send a test span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef6ff;strokeColor=#93c5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=13;shadow=1;" vertex="1" parent="1"><mxGeometry x="70" y="155" width="270" height="190" as="geometry"/></mxCell>
+          <mxCell id="receiver" value="Tempo receiver&#10;&#10;OTLP HTTP ingestion&#10;&#10;0.0.0.0:4318&#10;&#10;Validate and ingest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=13;shadow=1;" vertex="1" parent="1"><mxGeometry x="485" y="155" width="270" height="190" as="geometry"/></mxCell>
+          <mxCell id="storage" value="Tempo storage&#10;&#10;Local trace backend&#10;&#10;/var/tempo/traces&#10;&#10;Persist spans" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=13;shadow=1;" vertex="1" parent="1"><mxGeometry x="900" y="155" width="270" height="190" as="geometry"/></mxCell>
+          <mxCell id="grafana" value="Grafana Explore&#10;&#10;Tempo datasource&#10;&#10;query by trace ID&#10;&#10;Inspect the trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff6e8;strokeColor=#fdba74;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=13;shadow=1;" vertex="1" parent="1"><mxGeometry x="900" y="465" width="270" height="190" as="geometry"/></mxCell>
+          <mxCell id="ingest" value="port 4318" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="curl" target="receiver"><mxGeometry relative="1" as="geometry"/></mxCell>
+          <mxCell id="write" value="write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="receiver" target="storage"><mxGeometry relative="1" as="geometry"/></mxCell>
+          <mxCell id="query" value="query :3200" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="storage" target="grafana"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1290" y="250"/><mxPoint x="1290" y="560"/></Array></mxGeometry></mxCell>
+          <mxCell id="note" value="Grafana resolves Tempo through Docker Compose DNS using the service hostname tempo." style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#64748b;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="300" y="676" width="900" height="28" as="geometry"/></mxCell>
         </root>
       </mxGraphModel>
     </diagram>
