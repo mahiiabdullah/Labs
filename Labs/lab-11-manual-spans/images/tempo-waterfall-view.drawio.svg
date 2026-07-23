@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    @keyframes dash-flow {
+      to { stroke-dashoffset: 0; }
+    }
+    .title { font-size: 26px; font-weight: 700; fill: #000000; text-anchor: middle; }
+    .header { font-size: 14px; font-weight: 700; fill: #000000; }
+    .name { font-size: 15px; fill: #000000; }
+    .name-sub { font-size: 12px; fill: #666666; }
+    .meta { font-size: 12px; fill: #666666; }
+    .axis { font-size: 11px; fill: #888888; text-anchor: middle; }
+    .bar-text { font-size: 11px; font-weight: 600; fill: #ffffff; text-anchor: middle; }
+    .note { font-size: 13px; fill: #555555; text-anchor: middle; }
+    .axis-line {
+      stroke: #cccccc;
+      stroke-width: 1;
+      stroke-dasharray: 4;
+      stroke-dashoffset: -8;
+      animation: dash-flow 1200ms linear 0s infinite normal none running;
+    }
+  </style>
+
+  <text class="title" x="600" y="40">Grafana Tempo Waterfall View</text>
+
+  <!-- Outer panel -->
+  <rect x="40" y="80" width="1120" height="350" rx="8" ry="8" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+
+  <!-- Panel header -->
+  <rect x="40" y="80" width="1120" height="40" rx="8" ry="8" fill="#f5f5f5" stroke="#cccccc" stroke-width="1"/>
+  <text class="header" x="60" y="106">Trace  4bf92f3577b34da6a3ce929d0e0e4736</text>
+  <text class="meta" x="900" y="106">service: my-api</text>
+  <text class="meta" x="1080" y="106">duration: 95 ms</text>
+
+  <!-- Column headers -->
+  <text class="meta" x="60" y="142">Span name</text>
+  <text class="meta" x="500" y="142">Duration</text>
+  <text class="meta" x="1000" y="142">Span ID</text>
+
+  <!-- Animated timeline axis -->
+  <line class="axis-line" x1="500" y1="150" x2="1100" y2="150"/>
+  <text class="axis" x="500" y="165">0 ms</text>
+  <text class="axis" x="650" y="165">20 ms</text>
+  <text class="axis" x="800" y="165">40 ms</text>
+  <text class="axis" x="950" y="165">60 ms</text>
+  <text class="axis" x="1100" y="165">80 ms</text>
+
+  <!-- Row 1: handle_request (root) -->
+  <rect x="40" y="180" width="1120" height="60" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+  <text class="name" x="60" y="205">handle_request</text>
+  <text class="name-sub" x="60" y="225">root span</text>
+  <rect x="500" y="195" width="600" height="20" rx="4" ry="4" fill="#6c8ebf"/>
+  <text class="bar-text" x="800" y="210">95 ms</text>
+  <text class="meta" x="1000" y="215">a1b2c3d4e5f6</text>
+
+  <!-- Row 2: db_lookup (child) -->
+  <rect x="40" y="240" width="1120" height="60" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+  <text class="name" x="100" y="265">db_lookup</text>
+  <text class="name-sub" x="100" y="285">child of handle_request</text>
+  <rect x="500" y="255" width="180" height="20" rx="4" ry="4" fill="#d6b656"/>
+  <text class="bar-text" x="590" y="270">30 ms</text>
+  <text class="meta" x="1000" y="275">b2c3d4e5f6a7</text>
+
+  <!-- Row 3: cache_check (child) -->
+  <rect x="40" y="300" width="1120" height="60" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+  <text class="name" x="100" y="325">cache_check</text>
+  <text class="name-sub" x="100" y="345">child of handle_request</text>
+  <rect x="680" y="315" width="60" height="20" rx="4" ry="4" fill="#82b366"/>
+  <text class="bar-text" x="710" y="330">10 ms</text>
+  <text class="meta" x="1000" y="335">c3d4e5f6a7b8</text>
+
+  <!-- Bar duration legend -->
+  <text class="meta" x="60" y="395">Bar width represents elapsed time. Click any bar to open the attribute panel on the right side of the Explore view.</text>
+
+  <!-- draw.io editable model -->
+  <mxfile host="app.diagrams.net" type="device">
+    <diagram name="Waterfall" id="water-1">
+      <mxGraphModel dx="1200" dy="500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="500" math="0" shadow="0">
+        <root>
+          <mxCell id="0"/>
+          <mxCell id="1" parent="0"/>
+
+          <mxCell id="2" value="&lt;b&gt;Grafana Tempo Waterfall View&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;" vertex="1" parent="1">
+            <mxGeometry x="400" y="20" width="400" height="40" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="3" value="&lt;b&gt;Trace 4bf92f3577b34da6a3ce929d0e0e4736&lt;/b&gt;&lt;br&gt;service: my-api • duration: 95 ms" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#cccccc;align=left;verticalAlign=middle;spacingLeft=20;fontSize=13;" vertex="1" parent="1">
+            <mxGeometry x="40" y="80" width="1120" height="40" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="4" value="handle_request&lt;br&gt;&lt;i&gt;root span&lt;/i&gt;&lt;br&gt;a1b2c3d4e5f6" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#e0e0e0;align=left;verticalAlign=middle;spacingLeft=20;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="40" y="180" width="1120" height="60" as="geometry"/>
+          </mxCell>
+          <mxCell id="5" value="95 ms" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6c8ebf;strokeColor=#6c8ebf;fontSize=12;fontColor=#ffffff;fontStyle=1;" vertex="1" parent="1">
+            <mxGeometry x="500" y="195" width="600" height="20" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="6" value="db_lookup&lt;br&gt;&lt;i&gt;child of handle_request&lt;/i&gt;&lt;br&gt;b2c3d4e5f6a7" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#e0e0e0;align=left;verticalAlign=middle;spacingLeft=60;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="40" y="240" width="1120" height="60" as="geometry"/>
+          </mxCell>
+          <mxCell id="7" value="30 ms" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b656;strokeColor=#d6b656;fontSize=12;fontColor=#ffffff;fontStyle=1;" vertex="1" parent="1">
+            <mxGeometry x="500" y="255" width="180" height="20" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="8" value="cache_check&lt;br&gt;&lt;i&gt;child of handle_request&lt;/i&gt;&lt;br&gt;c3d4e5f6a7b8" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#e0e0e0;align=left;verticalAlign=middle;spacingLeft=60;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="40" y="300" width="1120" height="60" as="geometry"/>
+          </mxCell>
+          <mxCell id="9" value="10 ms" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#82b366;strokeColor=#82b366;fontSize=12;fontColor=#ffffff;fontStyle=1;" vertex="1" parent="1">
+            <mxGeometry x="680" y="315" width="60" height="20" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="10" value="Bar width represents elapsed time. Click any bar to open the attribute panel on the right side of the Explore view." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+            <mxGeometry x="40" y="385" width="900" height="20" as="geometry"/>
+          </mxCell>
+        </root>
+      </mxGraphModel>
+    </diagram>
+  </mxfile>
+</svg>

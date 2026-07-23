@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .title { font-size: 26px; font-weight: 700; fill: #000000; text-anchor: middle; }
+    .header { font-size: 14px; font-weight: 700; fill: #000000; }
+    .sub { font-size: 12px; fill: #666666; }
+    .key { font-size: 13px; fill: #000000; font-family: Menlo, Consolas, monospace; }
+    .value { font-size: 13px; fill: #1a6e2e; font-family: Menlo, Consolas, monospace; }
+    .section-title { font-size: 15px; font-weight: 700; fill: #000000; }
+    .section-sub { font-size: 12px; fill: #666666; }
+    .note { font-size: 13px; fill: #555555; text-anchor: middle; }
+  </style>
+
+  <text class="title" x="550" y="40">Tempo Span Attribute Panel</text>
+
+  <!-- Outer panel -->
+  <rect x="40" y="80" width="1020" height="440" rx="8" ry="8" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+
+  <!-- Panel header -->
+  <rect x="40" y="80" width="1020" height="40" rx="8" ry="8" fill="#f5f5f5" stroke="#cccccc" stroke-width="1"/>
+  <text class="header" x="60" y="106">Span attributes</text>
+  <text class="sub" x="900" y="106">service.name = my-api</text>
+
+  <!-- Section: handle_request -->
+  <text class="section-title" x="60" y="148">handle_request</text>
+  <text class="section-sub" x="240" y="148">root span</text>
+  <rect x="60" y="158" width="980" height="90" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+  <text class="key" x="80" y="183">user.id</text>
+  <text class="value" x="400" y="183">"u-42"</text>
+  <text class="key" x="80" y="208">request.id</text>
+  <text class="value" x="400" y="208">"r-1001"</text>
+  <text class="key" x="80" y="233">span.kind</text>
+  <text class="value" x="400" y="233">"internal"</text>
+
+  <!-- Section: db_lookup -->
+  <text class="section-title" x="60" y="270">db_lookup</text>
+  <text class="section-sub" x="200" y="270">child of handle_request</text>
+  <rect x="60" y="280" width="980" height="90" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+  <text class="key" x="80" y="305">db.query_time_ms</text>
+  <text class="value" x="400" y="305">30.12</text>
+  <text class="key" x="80" y="330">db.system</text>
+  <text class="value" x="400" y="330">"postgres"</text>
+  <text class="key" x="80" y="355">span.kind</text>
+  <text class="value" x="400" y="355">"internal"</text>
+
+  <!-- Section: cache_check -->
+  <text class="section-title" x="60" y="392">cache_check</text>
+  <text class="section-sub" x="220" y="392">child of handle_request</text>
+  <rect x="60" y="402" width="980" height="90" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+  <text class="key" x="80" y="427">cache.lookup_time_ms</text>
+  <text class="value" x="400" y="427">10.04</text>
+  <text class="key" x="80" y="452">cache.hit</text>
+  <text class="value" x="400" y="452">false</text>
+  <text class="key" x="80" y="477">span.kind</text>
+  <text class="value" x="400" y="477">"internal"</text>
+
+  <text class="note" x="550" y="550">Open one of the three spans in the waterfall to view its attribute panel in Grafana Explore.</text>
+
+  <mxfile host="app.diagrams.net" type="device">
+    <diagram name="Attribute Panel" id="attr-1">
+      <mxGraphModel dx="1100" dy="560" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="560" math="0" shadow="0">
+        <root>
+          <mxCell id="0"/>
+          <mxCell id="1" parent="0"/>
+
+          <mxCell id="2" value="&lt;b&gt;Tempo Span Attribute Panel&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;" vertex="1" parent="1">
+            <mxGeometry x="350" y="20" width="400" height="40" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="3" value="&lt;b&gt;Span attributes&lt;/b&gt; • service.name = my-api" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#cccccc;align=left;verticalAlign=middle;spacingLeft=20;fontSize=13;" vertex="1" parent="1">
+            <mxGeometry x="40" y="80" width="1020" height="40" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="4" value="&lt;b&gt;handle_request&lt;/b&gt; — root span&lt;br&gt;&lt;font face=&quot;Menlo&quot;&gt;user.id = &quot;u-42&quot;&lt;br&gt;request.id = &quot;r-1001&quot;&lt;br&gt;span.kind = &quot;internal&quot;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#e0e0e0;align=left;verticalAlign=middle;spacingLeft=20;fontSize=12;" vertex="1" parent="1">
+            <mxGeometry x="60" y="158" width="980" height="110" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="5" value="&lt;b&gt;db_lookup&lt;/b&gt; — child of handle_request&lt;br&gt;&lt;font face=&quot;Menlo&quot;&gt;db.query_time_ms = 30.12&lt;br&gt;db.system = &quot;postgres&quot;&lt;br&gt;span.kind = &quot;internal&quot;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#e0e0e0;align=left;verticalAlign=middle;spacingLeft=20;fontSize=12;" vertex="1" parent="1">
+            <mxGeometry x="60" y="280" width="980" height="110" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="6" value="&lt;b&gt;cache_check&lt;/b&gt; — child of handle_request&lt;br&gt;&lt;font face=&quot;Menlo&quot;&gt;cache.lookup_time_ms = 10.04&lt;br&gt;cache.hit = false&lt;br&gt;span.kind = &quot;internal&quot;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#e0e0e0;align=left;verticalAlign=middle;spacingLeft=20;fontSize=12;" vertex="1" parent="1">
+            <mxGeometry x="60" y="402" width="980" height="110" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="7" value="Open one of the three spans in the waterfall to view its attribute panel in Grafana Explore." style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontColor=#555555;" vertex="1" parent="1">
+            <mxGeometry x="200" y="535" width="700" height="20" as="geometry"/>
+          </mxCell>
+        </root>
+      </mxGraphModel>
+    </diagram>
+  </mxfile>
+</svg>

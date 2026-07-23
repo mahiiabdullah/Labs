@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .title { font-size: 26px; font-weight: 700; fill: #000000; text-anchor: middle; }
+    .label { font-size: 18px; font-weight: 600; fill: #000000; text-anchor: middle; }
+    .sub { font-size: 14px; fill: #444444; text-anchor: middle; }
+    .attr { font-size: 12px; font-family: Menlo, Consolas, monospace; fill: #555555; text-anchor: middle; }
+    .step { font-size: 13px; font-style: italic; fill: #555555; text-anchor: middle; }
+    .note { font-size: 13px; fill: #555555; text-anchor: middle; }
+  </style>
+
+  <text class="title" x="500" y="40">Manual Span Hierarchy</text>
+
+  <!-- Root span: handle_request -->
+  <g id="preview-root">
+    <rect x="360" y="100" width="280" height="160" rx="16" ry="16" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+    <text class="label" x="500" y="140">handle_request</text>
+    <text class="sub" x="500" y="170">root span</text>
+    <text class="attr" x="500" y="200">user.id, request.id</text>
+    <text class="step" x="500" y="230">parent of all spans below</text>
+  </g>
+
+  <!-- Child span: db_lookup -->
+  <g id="preview-db">
+    <rect x="80" y="380" width="320" height="160" rx="16" ry="16" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+    <text class="label" x="240" y="420">db_lookup</text>
+    <text class="sub" x="240" y="450">child of handle_request</text>
+    <text class="attr" x="240" y="480">db.query_time_ms, db.system</text>
+    <text class="step" x="240" y="510">step 1</text>
+  </g>
+
+  <!-- Child span: cache_check -->
+  <g id="preview-cache">
+    <rect x="600" y="380" width="320" height="160" rx="16" ry="16" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+    <text class="label" x="760" y="420">cache_check</text>
+    <text class="sub" x="760" y="450">child of handle_request</text>
+    <text class="attr" x="760" y="480">cache.lookup_time_ms, cache.hit</text>
+    <text class="step" x="760" y="510">step 2</text>
+  </g>
+
+  <!-- Tree connectors: parent down to a horizontal bridge, then down to each child -->
+  <!-- Vertical drop from parent to bridge -->
+  <line x1="500" y1="260" x2="500" y2="320" stroke="#333333" stroke-width="2" fill="none"/>
+
+  <!-- Horizontal bridge spanning to both children -->
+  <line x1="240" y1="320" x2="760" y2="320" stroke="#333333" stroke-width="2" fill="none"/>
+
+  <!-- Vertical drops from bridge to each child -->
+  <line x1="240" y1="320" x2="240" y2="380" stroke="#333333" stroke-width="2" fill="none"/>
+  <line x1="760" y1="320" x2="760" y2="380" stroke="#333333" stroke-width="2" fill="none"/>
+
+  <!-- Junction dots -->
+  <circle cx="500" cy="320" r="5" fill="#333333"/>
+  <circle cx="240" cy="320" r="5" fill="#333333"/>
+  <circle cx="760" cy="320" r="5" fill="#333333"/>
+
+  <text class="note" x="500" y="555">Each child span inherits its parent from the active OpenTelemetry context. No explicit parent ID is passed.</text>
+
+  <mxfile host="app.diagrams.net" type="device">
+    <diagram name="Span Hierarchy" id="hierarchy-1">
+      <mxGraphModel dx="1000" dy="560" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="560" math="0" shadow="0">
+        <root>
+          <mxCell id="0"/>
+          <mxCell id="1" parent="0"/>
+
+          <mxCell id="2" value="&lt;b&gt;Manual Span Hierarchy&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;" vertex="1" parent="1">
+            <mxGeometry x="300" y="20" width="400" height="40" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="3" value="&lt;b&gt;handle_request&lt;/b&gt;&lt;br&gt;root span&lt;br&gt;&lt;font face=&quot;Menlo&quot;&gt;user.id, request.id&lt;/font&gt;&lt;br&gt;&lt;i&gt;parent of all spans below&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="360" y="100" width="280" height="160" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="4" value="&lt;b&gt;db_lookup&lt;/b&gt;&lt;br&gt;child of handle_request&lt;br&gt;&lt;font face=&quot;Menlo&quot;&gt;db.query_time_ms,&lt;br&gt;db.system&lt;/font&gt;&lt;br&gt;&lt;i&gt;step 1&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="80" y="380" width="320" height="160" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="5" value="&lt;b&gt;cache_check&lt;/b&gt;&lt;br&gt;child of handle_request&lt;br&gt;&lt;font face=&quot;Menlo&quot;&gt;cache.lookup_time_ms,&lt;br&gt;cache.hit&lt;/font&gt;&lt;br&gt;&lt;i&gt;step 2&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+            <mxGeometry x="600" y="380" width="320" height="160" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="6" value="" style="endArrow=none;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1" source="3" target="4">
+            <mxGeometry relative="1" as="geometry"/>
+          </mxCell>
+          <mxCell id="7" value="" style="endArrow=none;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1" source="3" target="5">
+            <mxGeometry relative="1" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="8" value="Each child span inherits its parent from the active OpenTelemetry context. No explicit parent ID is passed." style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontColor=#555555;" vertex="1" parent="1">
+            <mxGeometry x="100" y="540" width="800" height="20" as="geometry"/>
+          </mxCell>
+        </root>
+      </mxGraphModel>
+    </diagram>
+  </mxfile>
+</svg>
