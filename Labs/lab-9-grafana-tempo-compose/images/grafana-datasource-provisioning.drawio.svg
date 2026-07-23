@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="500" viewBox="0 0 1440 500" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    @keyframes dash-flow {
+      to { stroke-dashoffset: 0; }
+    }
+    .title { font-size: 26px; font-weight: 700; fill: #000000; text-anchor: middle; }
+    .label { font-size: 18px; font-weight: 600; fill: #000000; text-anchor: middle; }
+    .sub { font-size: 14px; fill: #444444; text-anchor: middle; }
+    .code { font-family: Menlo, Consolas, monospace; font-size: 12px; fill: #444444; text-anchor: middle; }
+    .step { font-size: 13px; font-style: italic; fill: #555555; text-anchor: middle; }
+    .arrow-label { font-size: 13px; fill: #555555; text-anchor: middle; }
+    .note { font-size: 13px; fill: #555555; text-anchor: middle; }
+    .edge {
+      stroke: #333333;
+      stroke-width: 2;
+      stroke-dasharray: 8;
+      stroke-dashoffset: -16;
+      animation: dash-flow 600ms linear 0s infinite normal none running;
+      fill: none;
+    }
+  </style>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#333333"/>
+    </marker>
+  </defs>
+
+  <text class="title" x="720" y="40">Grafana Datasource Provisioning Flow</text>
+
+  <!-- Box 1: provisioning file (highlighted) -->
+  <g id="preview-prov">
+    <rect x="40" y="90" width="280" height="260" rx="16" ry="16" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+    <text class="label" x="180" y="125">Provisioning file</text>
+    <text class="sub" x="180" y="150">on host disk</text>
+    <text class="code" x="180" y="185">grafana/provisioning/</text>
+    <text class="code" x="180" y="205">datasources/</text>
+    <text class="code" x="180" y="225">tempo.yaml</text>
+    <text class="step" x="180" y="320">1. Author YAML</text>
+  </g>
+
+  <!-- Box 2: Grafana container -->
+  <g id="preview-grafana">
+    <rect x="430" y="90" width="280" height="260" rx="16" ry="16" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+    <text class="label" x="570" y="125">Grafana container</text>
+    <text class="sub" x="570" y="150">startup scan</text>
+    <text class="code" x="570" y="185">reads /etc/grafana/</text>
+    <text class="code" x="570" y="205">provisioning/</text>
+    <text class="code" x="570" y="225">datasources/*.yaml</text>
+    <text class="code" x="570" y="265">apiVersion: 1</text>
+    <text class="step" x="570" y="320">2. Parse and load</text>
+  </g>
+
+  <!-- Box 3: Datasource registered -->
+  <g id="preview-registered">
+    <rect x="820" y="90" width="280" height="260" rx="16" ry="16" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+    <text class="label" x="960" y="125">Datasource registered</text>
+    <text class="sub" x="960" y="150">in Grafana data layer</text>
+    <text class="code" x="960" y="185">name: Tempo</text>
+    <text class="code" x="960" y="205">type: tempo</text>
+    <text class="code" x="960" y="225">url: http://tempo:3200</text>
+    <text class="code" x="960" y="265">isDefault: true</text>
+    <text class="step" x="960" y="320">3. Available in Explore</text>
+  </g>
+
+  <!-- Box 4: Explore UI -->
+  <g id="preview-explore">
+    <rect x="1200" y="90" width="200" height="260" rx="16" ry="16" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+    <text class="label" x="1300" y="125">Explore UI</text>
+    <text class="sub" x="1300" y="150">browser</text>
+    <text class="code" x="1300" y="185">http://localhost:</text>
+    <text class="code" x="1300" y="205">3000</text>
+    <text class="code" x="1300" y="245">query by trace ID</text>
+    <text class="step" x="1300" y="320">4. Run query</text>
+  </g>
+
+  <!-- Animated arrows -->
+  <!-- "mount :ro" corridor: x=320 to x=430, 110px wide. Label at x=375 -->
+  <line class="edge" x1="320" y1="220" x2="424" y2="220" marker-end="url(#arrow)"/>
+  <text class="arrow-label" x="372" y="210">mount :ro</text>
+
+  <!-- "register" corridor: x=710 to x=820, 110px wide. Label at x=765 -->
+  <line class="edge" x1="710" y1="220" x2="814" y2="220" marker-end="url(#arrow)"/>
+  <text class="arrow-label" x="762" y="210">register</text>
+
+  <!-- "select" corridor: x=1100 to x=1200, 100px wide. Label at x=1150 -->
+  <line class="edge" x1="1100" y1="220" x2="1194" y2="220" marker-end="url(#arrow)"/>
+  <text class="arrow-label" x="1147" y="210">select</text>
+
+  <text class="note" x="720" y="450">No UI clicks required. The datasource appears on every container restart.</text>
+
+  <!-- draw.io editable model -->
+  <mxfile host="app.diagrams.net" type="device">
+    <diagram name="Provisioning" id="prov-1">
+      <mxGraphModel dx="1440" dy="500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="500" math="0" shadow="0">
+        <root>
+          <mxCell id="0"/>
+          <mxCell id="1" parent="0"/>
+
+          <mxCell id="2" value="&lt;b&gt;Grafana Datasource Provisioning Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;" vertex="1" parent="1">
+            <mxGeometry x="520" y="20" width="400" height="40" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="3" value="&lt;b&gt;Provisioning file&lt;/b&gt;&lt;br&gt;on host disk&lt;br&gt;&lt;font face=&quot;Menlo&quot;&gt;grafana/provisioning/&lt;br&gt;datasources/&lt;br&gt;tempo.yaml&lt;/font&gt;&lt;br&gt;&lt;i&gt;1. Author YAML&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;" vertex="1" parent="1">
+            <mxGeometry x="40" y="90" width="280" height="260" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="4" value="&lt;b&gt;Grafana container&lt;/b&gt;&lt;br&gt;startup scan&lt;br&gt;&lt;font face=&quot;Menlo&quot;&gt;reads /etc/grafana/&lt;br&gt;provisioning/&lt;br&gt;datasources/*.yaml&lt;br&gt;apiVersion: 1&lt;/font&gt;&lt;br&gt;&lt;i&gt;2. Parse and load&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=13;" vertex="1" parent="1">
+            <mxGeometry x="430" y="90" width="280" height="260" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="5" value="&lt;b&gt;Datasource registered&lt;/b&gt;&lt;br&gt;in Grafana data layer&lt;br&gt;&lt;font face=&quot;Menlo&quot;&gt;name: Tempo&lt;br&gt;type: tempo&lt;br&gt;url: http://tempo:3200&lt;br&gt;isDefault: true&lt;/font&gt;&lt;br&gt;&lt;i&gt;3. Available in Explore&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=13;" vertex="1" parent="1">
+            <mxGeometry x="820" y="90" width="280" height="260" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="6" value="&lt;b&gt;Explore UI&lt;/b&gt;&lt;br&gt;browser&lt;br&gt;&lt;font face=&quot;Menlo&quot;&gt;http://localhost:3000&lt;br&gt;query by trace ID&lt;/font&gt;&lt;br&gt;&lt;i&gt;4. Run query&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontSize=13;" vertex="1" parent="1">
+            <mxGeometry x="1200" y="90" width="200" height="260" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="7" value="mount :ro" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="3" target="4">
+            <mxGeometry relative="1" as="geometry"/>
+          </mxCell>
+          <mxCell id="8" value="register" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="4" target="5">
+            <mxGeometry relative="1" as="geometry"/>
+          </mxCell>
+          <mxCell id="9" value="select" style="endArrow=classic;html=1;rounded=0;strokeColor=#333333;strokeWidth=2;dashed=1;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="5" target="6">
+            <mxGeometry relative="1" as="geometry"/>
+          </mxCell>
+
+          <mxCell id="10" value="No UI clicks required. The datasource appears on every container restart." style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontColor=#555555;" vertex="1" parent="1">
+            <mxGeometry x="80" y="430" width="1280" height="30" as="geometry"/>
+          </mxCell>
+        </root>
+      </mxGraphModel>
+    </diagram>
+  </mxfile>
+</svg>
