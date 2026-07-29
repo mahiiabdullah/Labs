@@ -6,8 +6,6 @@ Distributed tracing produces spans in two services — a Flask API on the reques
 
 <p align="center"><img src="./images/full-system-trace-flow.drawio.svg" alt="End-to-end trace flow from HTTP client through Flask API, Redis broker, Celery worker, into Tempo and out to Grafana Explore"></p>
 
----
-
 ## Learning Objectives
 
 - Capture the active trace ID on the Flask response using `X-Trace-ID`.
@@ -16,6 +14,20 @@ Distributed tracing produces spans in two services — a Flask API on the reques
 - Read the service graph to identify which service contributes the most latency.
 - Inject latency into the worker span and observe how the waterfall attributes it.
 
+## Task Description
+
+In this lab, the trace ID is exposed on the Flask response, the resulting trace is located in Grafana Explore by trace ID, and the waterfall and service graph are used to identify the slowest service and span.
+
+## Table of Contents
+
+1. Chapter 1 — Trigger the Full Request and Capture the Trace ID
+2. Chapter 2 — Navigate the Trace Waterfall in Grafana
+3. Chapter 3 — Interpret Latency Using the Waterfall and Service Graph
+
+## Architecture
+
+OpenTelemetry emits a **span** for every unit of work in a process. A span carries a name, start/end timestamps, attributes, and — crucially — a **trace ID** that is shared with every other span in the same trace. A **tracer** is the object that creates spans via `tracer.start_as_current_span(...)`. The mechanism that moves a trace ID across a process boundary (HTTP, Redis, Celery, Kafka) is called **context propagation**: the sender packages the current trace context into a plain Python dict called a **carrier**, the receiver reads it back and starts a child span from it. The serialized form is a single header named **traceparent** defined by the W3C Trace Context standard. The place where all spans end up — indexed by trace ID and searchable — is **Tempo**, which speaks the **OTLP** (OpenTelemetry Line Protocol) format over HTTP on port `4318`. In Grafana, Tempo renders spans as a **waterfall**, a left-to-right diagram in which each row is one span and the bar width is the span's duration.
+
 ## Prerequisites
 
 - Lab 9 — running Grafana + Tempo stack reachable on `http://localhost:3000` with the Tempo datasource provisioned.
@@ -23,14 +35,6 @@ Distributed tracing produces spans in two services — a Flask API on the reques
 - Lab 11 — manual child spans using `tracer.start_as_current_span(...)` with custom attributes.
 - Lab 12 — Celery worker that calls `propagate.extract(carrier)` and `start_as_current_span(..., context=ctx)`.
 - Redis running locally on `localhost:6379`.
-
----
-
-## Prologue
-
-OpenTelemetry emits a **span** for every unit of work in a process. A span carries a name, start/end timestamps, attributes, and — crucially — a **trace ID** that is shared with every other span in the same trace. A **tracer** is the object that creates spans via `tracer.start_as_current_span(...)`. The mechanism that moves a trace ID across a process boundary (HTTP, Redis, Celery, Kafka) is called **context propagation**: the sender packages the current trace context into a plain Python dict called a **carrier**, the receiver reads it back and starts a child span from it. The serialized form is a single header named **traceparent** defined by the W3C Trace Context standard. The place where all spans end up — indexed by trace ID and searchable — is **Tempo**, which speaks the **OTLP** (OpenTelemetry Line Protocol) format over HTTP on port `4318`. In Grafana, Tempo renders spans as a **waterfall**, a left-to-right diagram in which each row is one span and the bar width is the span's duration.
-
----
 
 ## Environment Setup
 
@@ -321,7 +325,7 @@ The latency is attributed to the worker, where it actually happened. The waterfa
 
 ---
 
-## Epilogue
+## Conclusion
 
 By the end of this lab, the request trace is fully observable end-to-end:
 
