@@ -92,9 +92,10 @@ You will create a `docker-compose.yml` file that defines the grafana and tempo s
 
 ### Implementation
 
-Create `docker-compose.yml` with the following content. Fill in the blank.
+Create `docker-compose.yml` with the following content. Run this heredoc from inside `lab-9-grafana-tempo-compose/`. The single quotes around `'EOF'` stop the shell from expanding any characters, so the YAML lands in the file exactly as shown.
 
-```yaml
+```bash
+cat > docker-compose.yml <<'EOF'
 version: "3.9"
 
 services:
@@ -106,7 +107,7 @@ services:
       - tempo-data:/var/tempo
     ports:
       - "3200:3200"
-      - "___________:4318"
+      - "4318:4318"
 
   grafana:
     image: grafana/grafana:latest
@@ -122,11 +123,16 @@ services:
 
 volumes:
   tempo-data:
+EOF
 ```
 
-**Fill in the blank** — the host-side port mapped to Tempo's OTLP HTTP receiver (container port 4318). Use the same number on both sides for simplicity.
+Confirm the file was written correctly.
 
-> **Answer:** `4318`. Tempo's OTLP HTTP receiver listens on container port 4318; the host-side mapping mirrors it.
+```bash
+cat docker-compose.yml
+```
+
+The output must show `4318:4318` on the host-to-container port mapping line.
 
 The `tempo` service mounts `tempo.yml` read-only into the container at `/etc/tempo.yml`. The `command` flag tells the Tempo binary to load that file at startup. The named volume `tempo-data` persists spans across container restarts.
 
@@ -172,9 +178,10 @@ You will write a Tempo configuration file with an OTLP receiver block, and a Gra
 
 ### Implementation
 
-Write `tempo.yml` with the following content.
+Write `tempo.yml` with the following content. Run the heredoc from inside `lab-9-grafana-tempo-compose/`.
 
-```yaml
+```bash
+cat > tempo.yml <<'EOF'
 server:
   http_listen_port: 3200
 
@@ -192,28 +199,33 @@ storage:
       path: /var/tempo/traces
     wal:
       path: /var/tempo/wal
+EOF
 ```
 
-Write `grafana/provisioning/datasources/tempo.yaml` with the following content. Fill in the two blanks.
+Write `grafana/provisioning/datasources/tempo.yaml` with the following content. Run the heredoc from inside `lab-9-grafana-tempo-compose/`.
 
-```yaml
+```bash
+cat > grafana/provisioning/datasources/tempo.yaml <<'EOF'
 apiVersion: 1
 
 datasources:
   - name: Tempo
-    type: ___________
+    type: tempo
     access: proxy
-    url: http://___________:3200
+    url: http://tempo:3200
     isDefault: true
     editable: true
+EOF
 ```
 
-**Fill in the blanks**
+Confirm both files are correct:
 
-- Blank 1 — the Grafana datasource type identifier that matches Tempo's query API.
-- Blank 2 — the Docker service name used as the hostname inside the compose network.
+```bash
+cat tempo.yml
+cat grafana/provisioning/datasources/tempo.yaml
+```
 
-> **Answers:** blank 1 is `tempo`, blank 2 is `tempo`. Grafana references Tempo by service name, not by `localhost`, because `localhost` inside a container is the container itself.
+`tempo.yml` must show the OTLP HTTP endpoint `0.0.0.0:4318`. `tempo.yaml` must show `type: tempo` and `url: http://tempo:3200`. Grafana references Tempo by service name, not by `localhost`, because `localhost` inside a container is the container itself.
 
 The `server.http_listen_port` setting tells Tempo which port serves its HTTP query API. The `distributor.receivers.otlp.protocols.http.endpoint` line opens the OTLP HTTP listener on all interfaces at port 4318. The `storage.trace` block selects the `local` backend and points it at two directories inside the container for traces and the write-ahead log.
 
@@ -295,17 +307,15 @@ cat > span.json <<'EOF'
 EOF
 ```
 
-Send the span with curl. Fill in the blank.
+Send the span with curl.
 
 ```bash
 curl -X POST http://localhost:4318/v1/traces \
-  -H "Content-Type: ___________" \
+  -H "Content-Type: application/json" \
   --data-binary @span.json
 ```
 
-**Fill in the blank** — the HTTP Content-Type header required by the OTLP HTTP JSON receiver.
-
-> **Answer:** `application/json`. Tempo parses the body as JSON; without this header it returns 415 Unsupported Media Type.
+The `Content-Type: application/json` header is required. Tempo parses the body as JSON; without it the receiver returns 415 Unsupported Media Type.
 
 The `resourceSpans` array is the top-level OTLP envelope. Each entry contains a `resource` with attributes describing the producing service, and a `scopeSpans` array containing actual spans. The `traceId` is a 16-byte hex string that uniquely identifies the trace, while `spanId` is an 8-byte hex string that identifies one span within it. Timestamps are expressed in nanoseconds since the Unix epoch.
 

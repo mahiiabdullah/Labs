@@ -100,39 +100,33 @@ You will import `trace` from OpenTelemetry, obtain a tracer named after the curr
 
 ### Implementation
 
-Replace `app.py` with the following content. Fill in the three blanks.
+Replace `app.py` with the following content. Run the heredoc from inside `lab-11-manual-spans/`.
 
-```python
+```bash
+cat > app.py <<'EOF'
 from flask import Flask
-from ___________ import trace
+from opentelemetry import trace
 
 app = Flask(__name__)
-tracer = trace.get_tracer(___________)
+tracer = trace.get_tracer(__name__)
 
 @app.get("/hello")
 def hello():
     user_id = "u-42"
     request_id = "r-1001"
-    with tracer.___________("handle_request") as span:
+    with tracer.start_as_current_span("handle_request") as span:
         span.set_attribute("user.id", user_id)
         span.set_attribute("request.id", request_id)
         return {"message": "hello from instrumented api"}, 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+EOF
 ```
 
-**Fill in the blanks**
+`from opentelemetry import trace` gives the module access to the global tracer provider. `trace.get_tracer(__name__)` returns a tracer scoped to the current module, which the SDK uses to record the `otel.library.name` attribute on every emitted span.
 
-- Blank 1 — the top-level package that exposes the `trace` module.
-- Blank 2 — the Python variable that resolves to the current module name.
-- Blank 3 — the context manager method that activates the span for the duration of the `with` block.
-
-> **Answers:** `opentelemetry`, `__name__`, `start_as_current_span`.
-
-The import `from opentelemetry import trace` gives the module access to the global tracer provider. `trace.get_tracer(__name__)` returns a tracer scoped to the current module, which the SDK uses to record the `otel.library.name` attribute on every emitted span.
-
-The `with tracer.start_as_current_span("handle_request") as span:` block does three things. It starts a new span, sets that span as the current span in the active OpenTelemetry context, and binds the span object to the local variable `span`. When the block exits, the span is ended automatically.
+The `with tracer.start_as_current_span("handle_request") as span:` block starts a new span, sets that span as the current span in the active OpenTelemetry context, and binds the span object to the local variable `span`. When the block exits, the span is ended automatically.
 
 The `set_attribute` calls attach key-value pairs to the span. The keys `user.id` and `request.id` use a dotted namespace convention that follows OpenTelemetry semantic conventions for resource and span attributes.
 
@@ -180,9 +174,10 @@ You will add an attribute that records the duration of an artificial database lo
 
 ### Implementation
 
-Replace `app.py` with the following content. Fill in the two blanks.
+Replace `app.py` with the following content. Run the heredoc from inside `lab-11-manual-spans/`.
 
-```python
+```bash
+cat > app.py <<'EOF'
 import time
 from flask import Flask
 from opentelemetry import trace
@@ -201,20 +196,14 @@ def hello():
         start = time.perf_counter()
         time.sleep(0.05)
         elapsed_ms = (time.perf_counter() - start) * 1000
-        span.___________("___________", round(elapsed_ms, 2))
+        span.set_attribute("db.query_time_ms", round(elapsed_ms, 2))
 
         return {"message": "hello from instrumented api"}, 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+EOF
 ```
-
-**Fill in the blanks**
-
-- Blank 1 — the span method that records a key-value pair on the active span.
-- Blank 2 — the dotted attribute name that records the measured query duration in milliseconds.
-
-> **Answers:** `set_attribute`, `db.query_time_ms`.
 
 The `time.perf_counter()` call returns a high-resolution monotonic clock value. Subtracting the start value and multiplying by 1000 produces an elapsed duration in milliseconds. The `round(elapsed_ms, 2)` call keeps two decimal places so the attribute value stays compact.
 
@@ -256,9 +245,10 @@ You will split the handler into three spans. The `handle_request` span remains t
 
 ### Implementation
 
-Replace `app.py` with the following content. Both child spans sit inside the active `handle_request` parent, so no explicit parent reference is needed.
+Replace `app.py` with the following content. Both child spans sit inside the active `handle_request` parent, so no explicit parent reference is needed. Run the heredoc from inside `lab-11-manual-spans/`.
 
-```python
+```bash
+cat > app.py <<'EOF'
 import time
 from flask import Flask
 from opentelemetry import trace
@@ -292,6 +282,7 @@ def hello():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+EOF
 ```
 
 Each `start_as_current_span` call inside the handler becomes a child of the currently active span. When `start_as_current_span("db_lookup")` runs, the active context contains `handle_request`, so the new span becomes its child. When `db_lookup` exits, the active context returns to `handle_request`, allowing `cache_check` to attach as a sibling child.

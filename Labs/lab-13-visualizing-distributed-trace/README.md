@@ -101,11 +101,22 @@ A Flask endpoint that sets the current trace ID on the response under the `X-Tra
 
 ### Implementation
 
-In `app.py`, before returning from `/process`, read the active span and put its trace ID on the response:
+In `app.py`, replace the `/process` handler so it sets the trace ID header on the response. Run from inside `trace-lab/`.
 
-```python
-from flask import jsonify, request, make_response
+```bash
+cat > app.py <<'EOF'
+import socket
+from flask import Flask, jsonify, request, make_response
+from celery import Celery
+from tasks import celery_app, process_item
 from opentelemetry import trace
+from opentelemetry.propagate import inject
+
+flask_app = Flask(__name__)
+flask_app.config["CELERY_BROKER_URL"] = "redis://localhost:6379/0"
+flask_app.config["CELERY_RESULT_BACKEND"] = "redis://localhost:6379/0"
+celery_app.conf.update(broker_url=flask_app.config["CELERY_BROKER_URL"])
+tracer = trace.get_tracer(__name__)
 
 @flask_app.post("/process")
 def enqueue_process():
@@ -116,13 +127,12 @@ def enqueue_process():
     span = trace.get_current_span()
     trace_id_hex = format(span.get_span_context().trace_id, "032x")
     response = make_response(jsonify({"task_id": "...", "trace_id": trace_id_hex}))
-    response.headers["___________"] = trace_id_hex   # blank 1
+    response.headers["X-Trace-ID"] = trace_id_hex
     return response
+EOF
 ```
 
-**Fill in the blank** — the response header name used to expose the trace ID. The same string is used later for the deep-link URL.
-
-> **Answer:** `X-Trace-ID`. A common convention; use the same string here and in Chapter 2.
+The header is named `X-Trace-ID` — a common convention. The same string is used in Chapter 2's deep-link URL.
 
 `trace.get_current_span()` returns the active span — the Flask server span opened by the auto-instrumentation. `span.get_span_context().trace_id` is an integer; formatting it as `"032x"` produces a 32-character lowercase hex string that matches what Tempo stores internally. Setting it as a response header makes the value reachable by any HTTP client without parsing the JSON body.
 
@@ -184,29 +194,24 @@ The waterfall opens. Each row is one span:
 
 The bar width is the span's duration. Click any bar to expand it and see attributes (`item.id`, `worker.hostname`).
 
-TraceQL alternative — in the query type dropdown, choose **TraceQL** and write:
+TraceQL alternative — in the query type dropdown, choose **TraceQL** and write a query that filters by service name and the trace ID you captured. Replace `<TRACE_ID>` with the 32-character hex value from `X-Trace-ID`:
 
 ```traceql
-{ resource.service.name = "flask-api" && traceID = "___________" }
+{ resource.service.name = "flask-api" && traceID = "<TRACE_ID>" }
 ```
 
-(blank 2 — paste the trace ID captured in Chapter 1)
-
-> **Answer:** `a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4` (substitute the actual trace ID you captured).
-
-Deep-link directly to a trace using the URL pattern:
+Deep-link directly to a trace using the URL pattern. Substitute `<TRACE_ID>` with the value from `X-Trace-ID`:
 
 ```
-http://localhost:3000/explore?orgId=1&left=%7B%22datasource%22:%22Tempo%22,%22queries%22:%5B%7B%22query%22:%22___________%22%7D%5D%7D
+http://localhost:3000/explore?orgId=1&left=%7B%22datasource%22:%22Tempo%22,%22queries%22:%5B%7B%22query%22:%22<TRACE_ID>%22%7D%5D%7D
 ```
 
-(blank 3 — the URL field that carries the trace ID)
-
-> **Answer:** the trace ID itself, for example `a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4`.
-
-Build and open it from the shell:
+Build and open it from the shell, saving the trace ID from the previous chapter into a shell variable first:
 
 ```bash
+TRACE_ID=$(curl -s -X POST http://localhost:8000/process \
+    -H "Content-Type: application/json" \
+    -d '{"item_id": 7}' | grep -o '"trace_id":"[^"]*"' | cut -d'"' -f4)
 echo "http://localhost:3000/explore?datasource=Tempo&query=$TRACE_ID"
 ```
 
@@ -241,9 +246,7 @@ A procedure for reading a single trace's waterfall, switching to the service gra
 
 Open the waterfall from Chapter 2. Look at the bars left-to-right. The wider the bar, the longer that span ran. The span whose bar reaches farthest to the right is the slowest operation in the trace.
 
-In the trace from Chapter 1 the `celery-process` bar is wider than the Flask bar — the worker is the slow part, not the API. **The widest bar in the waterfall is the slowest span** (blank 4).
-
-> **Answer:** the `celery-process` span is the widest bar in the waterfall.
+In the trace from Chapter 1 the `celery-process` bar is wider than the Flask bar — the worker is the slow part, not the API. The widest bar in the waterfall is the slowest span.
 
 Switch from the trace view to the **Service Graph** view in Grafana Explore. Tempo renders two nodes and an edge:
 
@@ -251,9 +254,7 @@ Switch from the trace view to the **Service Graph** view in Grafana Explore. Tem
 - **`celery-worker`** node.
 - An arrow labeled with rolled-up traffic stats — requests per second and a percentile latency (for example `p95 = 2.3s`).
 
-The service graph shows aggregate dependency and latency over many traces. It does not show individual span attributes or parent-child links within a single trace (blank 5).
-
-> **Answer:** the service graph shows aggregate traffic and latency statistics between services, which the per-trace waterfall view does not display.
+The service graph shows aggregate dependency and latency over many traces. It does not show individual span attributes or parent-child links within a single trace. The service graph shows aggregate traffic and latency statistics between services, which the per-trace waterfall view does not display.
 
 For a single trace, the widest bar in the waterfall identifies the slowest span. For aggregate analysis across many traces, the service graph identifies which edge contributes the most latency on average.
 

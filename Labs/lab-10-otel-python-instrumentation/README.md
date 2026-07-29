@@ -106,34 +106,21 @@ You will install the distro package, the HTTP exporter, and the Flask instrument
 
 ### Implementation
 
-Install the core packages. Fill in the first blank.
+Install the core packages plus the Flask instrumentation in one command.
 
 ```bash
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http ___________
+pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http opentelemetry-instrumentation-flask
 ```
 
-Install the Flask instrumentation package.
+Auto-install every other instrumentation library detected in the active environment.
 
 ```bash
-pip install opentelemetry-instrumentation-flask
+opentelemetry-distro opentelemetry-bootstrap -a install
 ```
 
-Auto-install every instrumentation library detected in the active environment. Fill in the second blank.
+`opentelemetry-distro` provides the wrapper scripts. `opentelemetry-exporter-otlp-proto-http` ships the HTTP exporter that posts spans to Tempo. `opentelemetry-instrumentation-flask` patches Flask at import time so each request becomes a span.
 
-```bash
-opentelemetry-distro ___________ install
-```
-
-**Fill in the blanks**
-
-- Blank 1 — the Flask-specific instrumentation package.
-- Blank 2 — the command shipped by the distro that scans the environment and installs matching instrumentation packages.
-
-> **Answers:** blank 1 is `opentelemetry-instrumentation-flask`. Blank 2 is `opentelemetry-bootstrap` (run as `opentelemetry-distro opentelemetry-bootstrap -a install`).
-
-The first command installs three packages. `opentelemetry-distro` provides the wrapper scripts. `opentelemetry-exporter-otlp-proto-http` ships the HTTP exporter that posts spans to Tempo. `opentelemetry-instrumentation-flask` patches Flask at import time so each request becomes a span.
-
-The second command runs the bootstrap script. The `-a install` flag tells the script to invoke `pip install` for each detected instrumentation package. After it finishes, every supported library in the environment has its matching instrumentation installed.
+The bootstrap script scans the environment for instrumented libraries and installs matching instrumentation packages. After it finishes, every supported library has its matching instrumentation installed.
 
 ### Test and Verify
 
@@ -170,16 +157,14 @@ You will export four environment variables before starting the API. They control
 
 ### Implementation
 
-Export the four variables. Fill in the three blanks.
+Export the four variables. The endpoint is the Tempo OTLP HTTP receiver from Lab 9.
 
 ```bash
 export OTEL_SERVICE_NAME=my-api
-export OTEL_EXPORTER_OTLP_ENDPOINT=___________
-export OTEL_TRACES_EXPORTER=___________
-export OTEL_EXPORTER_OTLP_PROTOCOL=___________
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+export OTEL_TRACES_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 ```
-
-> **Answers:** `http://localhost:4318`, `otlp`, `http/protobuf`. The endpoint is the Tempo OTLP HTTP receiver from Lab 9.
 
 `OTEL_SERVICE_NAME` sets the `service.name` resource attribute that appears on every span from this process. `OTEL_EXPORTER_OTLP_ENDPOINT` sets the destination URL. `OTEL_TRACES_EXPORTER` selects the OTLP exporter as the trace sink. `OTEL_EXPORTER_OTLP_PROTOCOL` selects the HTTP transport with protobuf payloads, matching the Tempo receiver defined in `tempo.yml`.
 
@@ -191,7 +176,7 @@ Print the values to confirm they are set in the current shell.
 env | grep OTEL_
 ```
 
-The output should include all four variables with the values from the answers above.
+The output must include all four variables with the values set above.
 
 ### Checkpoint
 
@@ -217,17 +202,15 @@ You will start the Flask application under the `opentelemetry-instrument` wrappe
 
 ### Implementation
 
-Start the application under the wrapper. Fill in the two blanks.
+Start the application under the wrapper.
 
 ```bash
-___________ \
-    --service_name ___________ \
+opentelemetry-instrument \
+    --service_name my-api \
     --exporter_otlp_endpoint http://localhost:4318 \
     --exporter_otlp_protocol http/protobuf \
     -- python -m flask run --host=0.0.0.0 --port=5000
 ```
-
-> **Answers:** blank 1 is `opentelemetry-instrument`. Blank 2 is `my-api` (the value you set in `OTEL_SERVICE_NAME`).
 
 The wrapper reads each flag and converts it into an environment variable before exec'ing your command. `--service_name` sets `OTEL_SERVICE_NAME`. `--exporter_otlp_endpoint` sets `OTEL_EXPORTER_OTLP_ENDPOINT`. `--exporter_otlp_protocol` sets `OTEL_EXPORTER_OTLP_PROTOCOL`. The `--` separator marks the end of wrapper flags. The `python -m flask run --host=0.0.0.0 --port=5000` portion is launched after instrumentation is active.
 

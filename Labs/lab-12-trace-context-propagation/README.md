@@ -90,35 +90,39 @@ These packages give you:
 
 ### Configure Celery with Redis as the broker
 
-`tasks.py`:
+`tasks.py` — run from inside `trace-lab/`. The blank is filled with the answer so the file is runnable immediately:
 
-```python
+```bash
+cat > tasks.py <<'EOF'
 from celery import Celery
 
 celery_app = Celery(
     "trace-lab",
-    broker="______________________",     # blank 1
+    broker="redis://localhost:6379/0",
     backend="redis://localhost:6379/0",
 )
+EOF
 ```
 
 `app.py`:
 
-```python
+```bash
+cat > app.py <<'EOF'
 from celery import Celery
+from flask import Flask, jsonify, request
 from tasks import celery_app
+from opentelemetry import trace
+from opentelemetry.propagate import inject, extract
+
 flask_app = Flask(__name__)
-flask_app.config["CELERY_BROKER_URL"] = "______________________"
+flask_app.config["CELERY_BROKER_URL"] = "redis://localhost:6379/0"
 flask_app.config["CELERY_RESULT_BACKEND"] = "redis://localhost:6379/0"
 celery_app.conf.update(broker_url=flask_app.config["CELERY_BROKER_URL"])
+tracer = trace.get_tracer(__name__)
+EOF
 ```
 
-**Fill in the blanks**
-
-- Blank 1 — the Redis broker URL that the worker listens on.
-- Blank 2 — the same Redis URL so the Flask process enqueues to the same broker.
-
-> **Answers:** `redis://localhost:6379/0` for both. Celery and Flask must agree on the broker, or Flask will enqueue into a queue the worker never listens to.
+Celery and Flask must agree on the broker, or Flask will enqueue into a queue the worker never listens to. Both point at `redis://localhost:6379/0`.
 
 ### Start Redis and verify both processes
 
@@ -174,41 +178,29 @@ When a request comes in, Flask instrumentation opens a server span and makes it 
 
 ### The endpoint that creates a task
 
-`app.py`:
+`app.py` — the blanks are filled with the answers so the file is runnable as soon as the heredoc finishes. Append this block to the `app.py` you created in Environment Setup:
 
-```python
-from flask import Flask, jsonify, request
-from celery import Celery
-from tasks import celery_app, process_item
-from opentelemetry import trace
+```bash
+cat >> app.py <<'EOF'
 from opentelemetry.propagate import inject
-
-flask_app = Flask(__name__)
-tracer = trace.get_tracer(__name__)
 
 @flask_app.post("/process")
 def enqueue_process():
     item_id = request.json.get("item_id")
     carrier = {}
-    ______________________  # blank 3
-    task_result = process_item.delay(item_id, ______________________)  # blank 4
+    propagate.inject(carrier)
+    task_result = process_item.delay(item_id, carrier=carrier)
     return jsonify({"task_id": task_result.id, "trace_id": format(trace.get_current_span().get_span_context().trace_id, "032x")})
+EOF
 ```
 
-**Fill in the blanks**
-
-- Blank 3 — the call that writes the W3C `traceparent` header into the carrier dict.
-- Blank 4 — the keyword argument name that ships the carrier to the worker.
-
-> **Answers:** blank 3 is `propagate.inject(carrier)`. Blank 4 is `carrier=carrier` (passing the carrier as a keyword argument).
-
-`inject(carrier)` walks up to the currently active span context (here: the Flask server span) and writes the W3C `traceparent` header into the carrier dict. After `inject`, the carrier looks like:
+`propagate.inject(carrier)` walks up to the currently active span context (here: the Flask server span) and writes the W3C `traceparent` header into the carrier dict. After `inject`, the carrier looks like:
 
 ```python
 {"traceparent": "00-aaaa....-bbbb....-01"}
 ```
 
-That single string is enough to identify the trace and the parent span — no other state needs to be serialized.
+That single string is enough to identify the trace and the parent span — no other state needs to be serialized. The carrier is passed as a keyword argument (`carrier=carrier`) so the worker can read it by name.
 
 ### Confirm the trace ID is logged
 
@@ -248,9 +240,11 @@ On the worker side, the carrier is received, `extract` rebuilds the context, and
 
 ### The Celery task
 
-`tasks.py`:
+`tasks.py` — replace the file from Environment Setup with this version. The blanks are filled with the answers so the file is runnable as soon as the heredoc finishes. Run from inside `trace-lab/`:
 
-```python
+```bash
+cat > tasks.py <<'EOF'
+import socket
 from celery import Celery
 from opentelemetry import trace
 from opentelemetry.propagate import extract
@@ -260,8 +254,8 @@ tracer = trace.get_tracer(__name__)
 
 @celery_app.task(name="trace-lab.process_item")
 def process_item(item_id, carrier=None):
-    ctx = ______________________  # blank 5
-    with tracer.start_as_current_span("celery-process", ______________________=ctx) as span:  # blank 6
+    ctx = propagate.extract(carrier)
+    with tracer.start_as_current_span("celery-process", context=ctx) as span:
         span.set_attribute("item.id", item_id)
         span.set_attribute("worker.hostname", socket.gethostname())
         result = do_work(item_id)
@@ -270,14 +264,8 @@ def process_item(item_id, carrier=None):
 
 def do_work(item_id):
     return f"processed {item_id}"
+EOF
 ```
-
-**Fill in the blanks**
-
-- Blank 5 — the call that rebuilds the `Context` from the carrier dict.
-- Blank 6 — the keyword argument name that attaches the extracted context to the new span.
-
-> **Answers:** blank 5 is `propagate.extract(carrier)`. Blank 6 is `context=ctx`.
 
 `extract(carrier)` reads the `traceparent` header from the carrier dict and reconstructs a `Context` object. That context carries the original trace_id and the parent span_id. When the context is passed as `context=ctx` to `start_as_current_span`, the new span becomes a *child* of the Flask span — same trace, different span.
 
