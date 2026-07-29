@@ -47,7 +47,7 @@ Your task is to wrap the handler logic in a manually created span, add child spa
 
 Open a terminal on Linux, macOS, or Windows. Use any text editor or Markdown viewer to read this file side by side.
 
-Reuse the project from Lab 10 by copying it forward and re-entering the virtual environment.
+Reuse the project from Lab 10 by copying it forward and re-entering the virtual environment. All commands below assume you are inside `lab-11-manual-spans/`.
 
 ```bash
 cp -r lab-10-otel-python-instrumentation lab-11-manual-spans
@@ -57,13 +57,23 @@ source .venv/bin/activate
 
 On Windows, activate the virtual environment with `.venv\Scripts\activate` instead of `source .venv/bin/activate`.
 
-Confirm that the Grafana and Tempo stack from Lab 9 is still running.
+Confirm the working directory and the lab folder are present.
 
 ```bash
-docker compose -f ../lab-9-grafana-tempo-compose/docker-compose.yml ps
+pwd
+ls -la
 ```
 
-Both services should report `running` before you continue.
+The output must end in `/lab-11-manual-spans` and show `app.py` and `.venv/`.
+
+Confirm the Grafana and Tempo stack from Lab 9 is still running. The simplest check from any working directory:
+
+```bash
+curl -s http://localhost:3000/api/health
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:4318/v1/traces
+```
+
+Grafana should return `{"database":"ok"}`. Tempo should return any HTTP status (a 405 is fine — it means the receiver is listening). If either command fails, return to Lab 9 and run `docker compose up -d` from inside `lab-9-grafana-tempo-compose/`.
 
 Re-export the same OpenTelemetry environment variables from Lab 10.
 
@@ -87,14 +97,6 @@ The recommended way to create a span is the `start_as_current_span` context mana
 You will import `trace` from OpenTelemetry, obtain a tracer named after the current module, and wrap the Flask route body in a root span called `handle_request`.
 
 <p align="center"><img src="./images/span-hierarchy.drawio.svg" alt="Three-span tree with handle_request at the root and db_lookup and cache_check as children"></p>
-
-### Think First
-
-<details>
-<summary>Prediction: If start_span() is used instead of start_as_current_span(), will a subsequently created span attach to it as a child?</summary>
-
-No. `start_span()` returns a span object but does not set it as the current span in the active context. A subsequent `start_as_current_span()` call will use the previous parent or none at all, producing a separate root trace. You must either use `start_as_current_span()` or manually wrap the span in a `with trace.use_span(span):` block.
-</details>
 
 ### Implementation
 
@@ -120,33 +122,13 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
 ```
 
-<details>
-<summary>Reveal answer</summary>
+**Fill in the blanks**
 
-```python
-from flask import Flask
-from opentelemetry import trace
+- Blank 1 — the top-level package that exposes the `trace` module.
+- Blank 2 — the Python variable that resolves to the current module name.
+- Blank 3 — the context manager method that activates the span for the duration of the `with` block.
 
-app = Flask(__name__)
-tracer = trace.get_tracer(__name__)
-
-@app.get("/hello")
-def hello():
-    user_id = "u-42"
-    request_id = "r-1001"
-    with tracer.start_as_current_span("handle_request") as span:
-        span.set_attribute("user.id", user_id)
-        span.set_attribute("request.id", request_id)
-        return {"message": "hello from instrumented api"}, 200
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-```
-
-The first blank is `opentelemetry`, the top-level package that exposes the `trace` module. The second blank is `__name__`, the Python variable that resolves to the current module name and is the recommended instrumentation library identifier. The third blank is `start_as_current_span`, the context manager method that activates the span for the duration of the `with` block.
-</details>
-
-### Understanding the Code
+> **Answers:** `opentelemetry`, `__name__`, `start_as_current_span`.
 
 The import `from opentelemetry import trace` gives the module access to the global tracer provider. `trace.get_tracer(__name__)` returns a tracer scoped to the current module, which the SDK uses to record the `otel.library.name` attribute on every emitted span.
 
@@ -176,10 +158,13 @@ Open Grafana at http://localhost:3000 and choose the `Tempo` datasource in Explo
 
 ### Checkpoint
 
-- [ ] `app.py` imports `trace` from `opentelemetry`.
-- [ ] A tracer is obtained with `trace.get_tracer(__name__)`.
-- [ ] The Flask route is wrapped in `tracer.start_as_current_span("handle_request")`.
-- [ ] The span appears in Grafana Explore with both custom attributes.
+- [ ] The `handle_request` span appears in Grafana Explore with both `user.id` and `request.id` attributes.
+
+### Screenshot
+
+> *Drop your screenshot at `./images/lab-11-ch1-grafana-handle-request.png`.*
+
+<p align="center"><img src="./images/lab-11-ch1-grafana-handle-request.png" alt="Screenshot TODO — Grafana Explore showing the handle_request span with user.id and request.id attributes"></p>
 
 ## Chapter 2: Add Custom Business Attributes
 
@@ -192,14 +177,6 @@ OpenTelemetry recommends following semantic conventions for common attribute nam
 ### What You Will Build
 
 You will add an attribute that records the duration of an artificial database lookup. The handler will sleep for a short period, measure the elapsed milliseconds, and attach the value as an attribute on the active span.
-
-### Think First
-
-<details>
-<summary>Question: Why record measured timings as attributes instead of relying on the span duration?</summary>
-
-The span duration already captures total elapsed time. Recording an attribute gives you a labelled value that can be queried independently from other timings on the same span. For example, a span with both `db.query_time_ms` and `cache.lookup_time_ms` lets you compare the two directly without inspecting the waterfall.
-</details>
 
 ### Implementation
 
@@ -232,17 +209,12 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
 ```
 
-<details>
-<summary>Reveal answer</summary>
+**Fill in the blanks**
 
-```python
-span.set_attribute("db.query_time_ms", round(elapsed_ms, 2))
-```
+- Blank 1 — the span method that records a key-value pair on the active span.
+- Blank 2 — the dotted attribute name that records the measured query duration in milliseconds.
 
-The first blank is `set_attribute`, the span method that records a key-value pair on the active span. The second blank is `db.query_time_ms`, the dotted attribute name that records the measured query duration in milliseconds.
-</details>
-
-### Understanding the Code
+> **Answers:** `set_attribute`, `db.query_time_ms`.
 
 The `time.perf_counter()` call returns a high-resolution monotonic clock value. Subtracting the start value and multiplying by 1000 produces an elapsed duration in milliseconds. The `round(elapsed_ms, 2)` call keeps two decimal places so the attribute value stays compact.
 
@@ -260,9 +232,13 @@ In Grafana Explore, open the `handle_request` span. The attribute panel should n
 
 ### Checkpoint
 
-- [ ] The handler measures elapsed time using `time.perf_counter()`.
-- [ ] The span includes a `db.query_time_ms` attribute.
-- [ ] The attribute value appears in the Grafana span detail panel.
+- [ ] The span includes a `db.query_time_ms` attribute visible in the Grafana span detail panel.
+
+### Screenshot
+
+> *Drop your screenshot at `./images/lab-11-ch2-grafana-db-query-time.png`.*
+
+<p align="center"><img src="./images/lab-11-ch2-grafana-db-query-time.png" alt="Screenshot TODO — Grafana span detail panel showing db.query_time_ms attribute"></p>
 
 ## Chapter 3: Nest Child Spans
 
@@ -278,17 +254,9 @@ You will split the handler into three spans. The `handle_request` span remains t
 
 <p align="center"><img src="./images/tempo-waterfall-view.drawio.svg" alt="Simplified Grafana waterfall view showing handle_request, db_lookup, and cache_check with durations"></p>
 
-### Think First
-
-<details>
-<summary>Question: Why does nesting not require passing the parent span ID explicitly?</summary>
-
-The OpenTelemetry context propagates the active span through thread-local storage and async task locals. Each call to `start_as_current_span` reads that active span, uses it as the parent, and installs the new span as the active context. This is the same mechanism the SDK uses to thread trace context across HTTP boundaries with the W3C Trace Context headers.
-</details>
-
 ### Implementation
 
-Replace `app.py` with the following content. Fill in the two blanks.
+Replace `app.py` with the following content. Both child spans sit inside the active `handle_request` parent, so no explicit parent reference is needed.
 
 ```python
 import time
@@ -326,13 +294,6 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
 ```
 
-The blanks in the code block above correspond to two blanks requested for this chapter:
-
-- The context manager syntax for a child span inside an already-active parent span is `with tracer.start_as_current_span("db_lookup") as db:`.
-- No explicit parent reference is needed because the SDK reads the active span from the OpenTelemetry context and uses it as the parent automatically.
-
-### Understanding the Code
-
 Each `start_as_current_span` call inside the handler becomes a child of the currently active span. When `start_as_current_span("db_lookup")` runs, the active context contains `handle_request`, so the new span becomes its child. When `db_lookup` exits, the active context returns to `handle_request`, allowing `cache_check` to attach as a sibling child.
 
 The `db.system` and `cache.hit` attributes follow the OpenTelemetry semantic conventions for database and cache spans. Recording them makes the trace searchable in Tempo and consistent with traces from other services that follow the same conventions.
@@ -347,25 +308,21 @@ Restart the API with the updated code and trigger one request.
 curl http://localhost:5000/hello
 ```
 
-<details>
-<summary>Prediction: How many spans appear in the Grafana waterfall for one request that goes through handle_request, db_lookup, and cache_check?</summary>
-
-Three spans appear in the waterfall: `handle_request` as the parent, with `db_lookup` and `cache_check` as nested children. The `handle_request` span duration is approximately the sum of the child durations because the children run sequentially inside the parent.
-</details>
-
 In Grafana Explore, open the trace and inspect the waterfall. The view should show three rows: a top-level `handle_request` bar, then indented `db_lookup` and `cache_check` bars underneath. Click each bar to view its attributes.
 
 ### Checkpoint
 
-- [ ] The handler creates three spans: `handle_request`, `db_lookup`, and `cache_check`.
-- [ ] `db_lookup` records `db.query_time_ms` and `db.system`.
-- [ ] `cache_check` records `cache.lookup_time_ms` and `cache.hit`.
-- [ ] The Grafana waterfall shows the three-span hierarchy.
+- [ ] The Grafana waterfall shows the three-span hierarchy with `db_lookup` and `cache_check` nested under `handle_request`.
+
+### Screenshot
+
+> *Drop your screenshot at `./images/lab-11-ch3-grafana-waterfall.png`.*
+
+<p align="center"><img src="./images/lab-11-ch3-grafana-waterfall.png" alt="Screenshot TODO — Grafana waterfall with handle_request, db_lookup, and cache_check spans"></p>
 
 ### Experiment
 
-1. Replace `start_as_current_span` with `start_span` for both child spans, and do not wrap them in `with trace.use_span(...)`.
-2. Change the two `with tracer.start_as_current_span(...) as db:` and `as cache:` lines to plain assignments.
+1. Replace `start_as_current_span` with `start_span` for both child spans and drop the `with` wrappers.
 
 ```python
 db = tracer.start_span("db_lookup")
@@ -377,15 +334,11 @@ time.sleep(0.01)
 cache.end()
 ```
 
-3. Restart the API and trigger a request.
-4. In Grafana Explore, query the service name `my-api`. The result should show three separate root traces rather than a single trace with three nested spans.
-5. Restore the `start_as_current_span` form and verify the hierarchy returns to a single parent trace with two children.
-
-<details>
-<summary>Question: Why do the spans appear as separate root traces when start_span is used without use_span?</summary>
+2. Restart the API and trigger a request.
+3. In Grafana Explore, query the service name `my-api`. The result should show three separate root traces rather than a single trace with three nested spans.
+4. Restore the `start_as_current_span` form and verify the hierarchy returns to a single parent trace with two children.
 
 `start_span()` creates a span but does not set it as the active span in the context. Each subsequent call has no parent in scope and falls back to creating a root span. The spans are exported independently, and Tempo groups them by trace ID, producing three unrelated traces instead of one hierarchical trace.
-</details>
 
 ## Conclusion
 
@@ -394,33 +347,3 @@ You extended the Flask API from Lab 10 with manual spans that capture the busine
 Grafana Tempo renders the result as a three-row waterfall with a populated attribute panel for every span. The experiment demonstrated that calling `start_span()` without an explicit context creates independent traces instead of a hierarchy, reinforcing the importance of `start_as_current_span` for parent-child propagation.
 
 This lab focused on creating and annotating spans within a single process. You did not propagate trace context across service boundaries, configure span sampling, or wire the spans into metrics. The next lab instruments an outbound HTTP call so the receiving service continues the same trace, producing linked parent and child spans across two services.
-
-## The Principles
-
-- Use `start_as_current_span` to ensure parent-child propagation through the active context.
-- Follow OpenTelemetry semantic conventions for attribute names to keep traces consistent across services.
-- Treat span duration as the source of truth for total time and use attributes for labelled sub-measurements.
-- Keep span names short, verb-noun phrases that describe a single unit of work.
-- Use the `with` block to guarantee spans are ended even when exceptions are raised.
-
-## Troubleshooting
-
-| Problem | Likely Cause | Resolution |
-|---------|--------------|------------|
-| Span does not appear in Grafana | The application was not started under `opentelemetry-instrument` | Restart with the wrapper so the SDK initializes the tracer provider |
-| Child spans appear as separate root traces | `start_span` was used without `use_span` or `start_as_current_span` | Switch back to `start_as_current_span` so the active context propagates |
-| Attribute value missing in the panel | The key contained unsupported characters or the value was not a primitive | Use lowercase dot-separated keys and pass strings, numbers, or booleans |
-| Span name is `unknown` | Tracer was obtained from a module without `__name__` | Always call `trace.get_tracer(__name__)` at module scope |
-| Waterfall shows only the root span | The auto-instrumentation wrapper is masking manual spans | Confirm `opentelemetry-instrumentation-flask` is installed and the wrapper is active |
-
-## Next Steps
-
-The next lab adds outbound HTTP client instrumentation. You will call a second service from this API and observe the W3C Trace Context headers propagated by the SDK, producing a single trace that spans both services.
-
-## Additional Resources
-
-- https://opentelemetry.io/docs/languages/python/instrumentation/
-- https://opentelemetry.io/docs/concepts/signals/traces/
-- https://opentelemetry.io/docs/specs/semconv/
-- https://opentelemetry-python.readthedocs.io/en/latest/api/trace.html
-- https://grafana.com/docs/tempo/latest/operations/span-search/

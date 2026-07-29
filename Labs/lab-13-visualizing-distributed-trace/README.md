@@ -38,7 +38,9 @@ OpenTelemetry emits a **span** for every unit of work in a process. A span carri
 
 ## Environment Setup
 
-Create the project directory and Python virtual environment:
+This lab builds on the stack from Labs 9–12. Make sure all three processes are running before you start.
+
+Create the project directory and Python virtual environment if you have not already:
 
 ```bash
 mkdir trace-lab && cd trace-lab
@@ -61,18 +63,31 @@ opentelemetry-instrumentation-flask==0.48b0
 opentelemetry-instrumentation-celery==0.48b0
 ```
 
-Start the system in three terminals:
+Open three terminals. Each one must `cd trace-lab` first so the modules import the same way.
 
 ```bash
-redis-server                                    # terminal 1
-celery -A tasks worker --loglevel=info           # terminal 2
+# terminal 1
+redis-server
+```
+
+```bash
+# terminal 2
+cd trace-lab && source .venv/bin/activate
+celery -A tasks worker --loglevel=info
+```
+
+```bash
+# terminal 3
+cd trace-lab && source .venv/bin/activate
+export OTEL_SERVICE_NAME=flask-api
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+export OTEL_TRACES_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 opentelemetry-instrument --service_name=flask-api \
-  flask --app app run --port 8000               # terminal 3
+  flask --app app run --port 8000
 ```
 
 The Flask API is now reachable at `http://localhost:8000`, the worker is consuming tasks from Redis, and both processes are exporting OTLP/HTTP spans to Tempo.
-
----
 
 ## Chapter 1 — Trigger the Full Request and Capture the Trace ID
 
@@ -83,13 +98,6 @@ Tempo organizes spans by trace ID. Without the trace ID on the request response,
 ### What You Will Build
 
 A Flask endpoint that sets the current trace ID on the response under the `X-Trace-ID` header so any HTTP client can capture it with `curl -i`.
-
-### Think First
-
-<details><summary>If the Celery worker picks up the task 3 seconds after the Flask span ends, predict how this gap will appear in the trace waterfall. Will it be drawn as part of the parent span? Will it be hidden? Will it show up at all?</summary>
-
-The gap is not part of any span. Tempo only stores spans, so the 3 seconds of waiting in the queue appear as whitespace between the end of the Flask bar and the start of the `celery-process` bar in the waterfall.
-</details>
 
 ### Implementation
 
@@ -112,18 +120,11 @@ def enqueue_process():
     return response
 ```
 
-**Fill in the blanks**
+**Fill in the blank** — the response header name used to expose the trace ID. The same string is used later for the deep-link URL.
 
-- Blank 1 — the response header name used to expose the trace ID. The same string is used later for the deep-link URL.
+> **Answer:** `X-Trace-ID`. A common convention; use the same string here and in Chapter 2.
 
-> **Hint:** A common convention is `X-Trace-ID`. Use the same string here and in Chapter 2.
-
-<details><summary>Show answer</summary>
-
-```
-response.headers["X-Trace-ID"] = trace_id_hex
-```
-</details>
+`trace.get_current_span()` returns the active span — the Flask server span opened by the auto-instrumentation. `span.get_span_context().trace_id` is an integer; formatting it as `"032x"` produces a 32-character lowercase hex string that matches what Tempo stores internally. Setting it as a response header makes the value reachable by any HTTP client without parsing the JSON body.
 
 Trigger the request and capture the header:
 
@@ -145,27 +146,20 @@ X-Trace-ID: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4
 
 Save the `X-Trace-ID` value for use in the next chapter.
 
-### Understanding the Code
-
-`trace.get_current_span()` returns the active span — the Flask server span opened by the auto-instrumentation. `span.get_span_context().trace_id` is an integer; formatting it as `"032x"` produces a 32-character lowercase hex string that matches what Tempo stores internally. Setting it as a response header makes the value reachable by any HTTP client without parsing the JSON body.
-
-### Test and Verify
-
-- Confirm the response carries the header named in blank 1.
-- Confirm the value is a 32-character lowercase hex string.
-- Confirm the worker terminal logged the task being processed.
-
 ### Checkpoint
 
-- The trace ID is on the response.
-- The worker logged the task.
-- The trace ID has been saved.
+- [ ] The response carries the `X-Trace-ID` header with a 32-character lowercase hex value.
+- [ ] The worker terminal logged the task being processed.
+
+### Screenshot
+
+> *Drop your screenshot at `./images/lab-13-ch1-curl-trace-id-header.png`.*
+
+<p align="center"><img src="./images/lab-13-ch1-curl-trace-id-header.png" alt="Screenshot TODO — curl -i showing the X-Trace-ID response header"></p>
 
 ### Experiment
 
 Replace the blank with a different header name (for example `X-Request-ID`) and trigger the request again. Confirm that the value is still 32 characters of lowercase hex but is no longer named `X-Trace-ID`. Restore `X-Trace-ID` after observing.
-
----
 
 ## Chapter 2 — Navigate the Trace Waterfall in Grafana
 
@@ -176,13 +170,6 @@ A trace ID is only useful if it can be turned into a waterfall in a small number
 ### What You Will Build
 
 A repeatable navigation flow: open Grafana Explore, pick the Tempo datasource, paste the trace ID, and arrive at the waterfall in two clicks.
-
-### Think First
-
-<details><summary>What is the practical difference between the Search by Trace ID tab and the TraceQL tab in Grafana's Tempo datasource? When would each be used?</summary>
-
-The Search tab takes a single trace ID and returns one trace. The TraceQL tab accepts a query expression like `{ resource.service.name = "flask-api" && traceID = "..." }` and returns matching traces. Use Search when the exact trace ID is known; use TraceQL when traces must be located by attribute without a known ID.
-</details>
 
 ### Implementation
 
@@ -205,12 +192,7 @@ TraceQL alternative — in the query type dropdown, choose **TraceQL** and write
 
 (blank 2 — paste the trace ID captured in Chapter 1)
 
-<details><summary>Show answer</summary>
-
-```
-{ resource.service.name = "flask-api" && traceID = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4" }
-```
-</details>
+> **Answer:** `a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4` (substitute the actual trace ID you captured).
 
 Deep-link directly to a trace using the URL pattern:
 
@@ -220,40 +202,30 @@ http://localhost:3000/explore?orgId=1&left=%7B%22datasource%22:%22Tempo%22,%22qu
 
 (blank 3 — the URL field that carries the trace ID)
 
+> **Answer:** the trace ID itself, for example `a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4`.
+
 Build and open it from the shell:
 
 ```bash
 echo "http://localhost:3000/explore?datasource=Tempo&query=$TRACE_ID"
 ```
 
-<details><summary>Show answer</summary>
-
-```
-http://localhost:3000/explore?orgId=1&left=%7B%22datasource%22:%22Tempo%22,%22queries%22:%5B%7B%22query%22:%22a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4%22%7D%5D%7D
-```
-</details>
-
-### Understanding the Code
-
 The URL is a standard Grafana Explore deep link. The `datasource` field selects Tempo; the nested `query` field is the value pasted into the search input. The percent-encoded curly braces and quotes are the JSON object Grafana reads to restore the panel state on load.
-
-### Test and Verify
-
-- Confirm the waterfall opens with exactly two spans.
-- Confirm the spans share a trace ID — both rows display the same 32-character hex value in their details.
-- Confirm the `celery-process` span shows the custom attribute `item.id = 7`.
 
 ### Checkpoint
 
-- The waterfall is reachable in two clicks from the trace ID.
-- The TraceQL query returns the same trace.
-- The deep-link URL opens the same waterfall.
+- [ ] The waterfall shows two spans: `POST /process` as the root and `celery-process` as the child.
+- [ ] The `celery-process` span shows the custom attribute `item.id = 7`.
+
+### Screenshot
+
+> *Drop your screenshot at `./images/lab-13-ch2-grafana-waterfall.png`.*
+
+<p align="center"><img src="./images/lab-13-ch2-grafana-waterfall.png" alt="Screenshot TODO — Grafana Explore waterfall with two spans joined by the same trace ID"></p>
 
 ### Experiment
 
 Open the deep-link URL in an incognito window with the same Grafana instance reachable. Confirm the trace loads without any prior session state. Close the window and reopen — Tempo is stateless, so the result is reproducible.
-
----
 
 ## Chapter 3 — Interpret Latency Using the Waterfall and Service Graph
 
@@ -265,23 +237,13 @@ The waterfall answers the question *"how long did each step take in this trace?"
 
 A procedure for reading a single trace's waterfall, switching to the service graph to compare aggregate latency, and confirming the attribution by injecting a known delay.
 
-### Think First
-
-<details><summary>Predict which span will be widest in the waterfall if the Celery task contains a time.sleep(2). After observing, explain why removing the sleep makes the two bars look closer in width.</summary>
-
-The `celery-process` span will be the widest by approximately 2 seconds. The Flask server span duration does not change because the sleep runs in the worker, not in the API. Removing the sleep drops the worker span's duration back to its baseline, leaving only the queue wait time as the gap between bars.
-</details>
-
 ### Implementation
 
 Open the waterfall from Chapter 2. Look at the bars left-to-right. The wider the bar, the longer that span ran. The span whose bar reaches farthest to the right is the slowest operation in the trace.
 
 In the trace from Chapter 1 the `celery-process` bar is wider than the Flask bar — the worker is the slow part, not the API. **The widest bar in the waterfall is the slowest span** (blank 4).
 
-<details><summary>Show answer</summary>
-
-The `celery-process` span is the widest bar in the waterfall.
-</details>
+> **Answer:** the `celery-process` span is the widest bar in the waterfall.
 
 Switch from the trace view to the **Service Graph** view in Grafana Explore. Tempo renders two nodes and an edge:
 
@@ -291,27 +253,21 @@ Switch from the trace view to the **Service Graph** view in Grafana Explore. Tem
 
 The service graph shows aggregate dependency and latency over many traces. It does not show individual span attributes or parent-child links within a single trace (blank 5).
 
-<details><summary>Show answer</summary>
-
-The service graph shows aggregate traffic and latency statistics between services, which the per-trace waterfall view does not display.
-</details>
+> **Answer:** the service graph shows aggregate traffic and latency statistics between services, which the per-trace waterfall view does not display.
 
 For a single trace, the widest bar in the waterfall identifies the slowest span. For aggregate analysis across many traces, the service graph identifies which edge contributes the most latency on average.
 
-### Understanding the Code
-
 Tempo computes the service graph by extracting the parent-child span relationships across all stored traces and rolling them up by `service.name`. The `p95` label on the edge is the 95th percentile of the time the downstream service spent processing each request, calculated from the span durations themselves.
-
-### Test and Verify
-
-- Confirm the widest bar is the `celery-process` span.
-- Confirm the Flask span duration did not grow when the worker was slowed down.
-- Confirm the service graph's `p95` value returns to its previous value after the sleep is removed.
 
 ### Checkpoint
 
-- The widest-bar rule is verified for the baseline trace.
-- The service graph distinction from the waterfall is understood.
+- [ ] The widest bar in the baseline trace is the `celery-process` span.
+
+### Screenshot
+
+> *Drop your screenshot at `./images/lab-13-ch3-tempo-service-graph.png`.*
+
+<p align="center"><img src="./images/lab-13-ch3-tempo-service-graph.png" alt="Screenshot TODO — Tempo service graph with flask-api and celery-worker nodes and a p95 latency label"></p>
 
 ### Experiment
 
@@ -322,8 +278,6 @@ Tempo computes the service graph by extracting the parent-child span relationshi
 5. Remove the `time.sleep(2)` after observing.
 
 The latency is attributed to the worker, where it actually happened. The waterfall does not blame the API.
-
----
 
 ## Conclusion
 
@@ -336,44 +290,3 @@ By the end of this lab, the request trace is fully observable end-to-end:
 - The service graph view summarizes traffic and latency across all traces between services.
 
 The system built across Labs 9–13 is now capable of answering the question *"why is this request slow?"* from a single trace ID.
-
----
-
-## The Principles
-
-1. **A trace ID is the join key.** Anything that carries it — headers, Redis payloads, log fields — becomes searchable in Tempo.
-2. **The waterfall is local to a trace.** It shows the timing of individual spans in one request.
-3. **The service graph is aggregate.** It summarizes traffic and latency across many traces.
-4. **Latency lives in the span that incurred it.** Injecting a delay into one span widens only that span's bar.
-5. **Propagation must be deliberate.** Without `inject` and `extract`, spans in different processes form separate traces.
-
----
-
-## Troubleshooting
-
-| Problem | Likely Cause | Resolution |
-|---------|--------------|------------|
-| Tempo search returns no results | The trace ID is wrong, the trace has not yet been exported, or the Tempo datasource is misconfigured | Verify the trace ID format (32 lowercase hex); wait a few seconds for OTLP export; re-check the Tempo datasource URL in Connections → Data sources |
-| Waterfall shows only one span | The Celery worker lost the carrier, or `propagate.extract` was not called | Confirm the Flask endpoint calls `propagate.inject(carrier)` and the worker calls `propagate.extract(carrier)` before `start_as_current_span` |
-| Service graph is empty | Tempo has not yet aggregated enough spans, or `service.name` is not set | Send several requests; confirm each process sets `OTEL_SERVICE_NAME` |
-| `time.sleep(2)` does not widen the bar | The sleep is outside the `with tracer.start_as_current_span(...)` block | Move `time.sleep(2)` inside the block |
-| Deep-link URL opens an empty panel | The trace ID is missing from the `query` field or wrong datasource is selected | Verify the `datasource=Tempo` segment and that `query=<trace_id>` is present |
-
----
-
-## Next Steps
-
-- Add **metrics** (Prometheus) and **logs** (Loki) and correlate them by trace ID.
-- Add more services to the trace and observe the cascade in the service graph.
-- Configure **sampling** in the OTLP exporter to reduce storage cost while preserving long-tail traces.
-- Set up **alerts** in Grafana when `p95` latency on a service graph edge exceeds a threshold.
-
----
-
-## Additional Resources
-
-- Grafana Tempo documentation: https://grafana.com/docs/tempo/latest/
-- Grafana TraceQL reference: https://grafana.com/docs/tempo/latest/traceql/
-- OpenTelemetry context propagation: https://opentelemetry.io/docs/concepts/context-propagation/
-- W3C Trace Context specification: https://www.w3.org/TR/trace-context/
-- OpenTelemetry Python API — `opentelemetry.propagate`: https://opentelemetry-python.readthedocs.io/en/stable/api/propagate.html

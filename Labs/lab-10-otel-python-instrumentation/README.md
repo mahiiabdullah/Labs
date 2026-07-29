@@ -24,6 +24,8 @@ By the end of this lab you will be able to:
 
 In this lab, the OpenTelemetry distro is installed, the OTLP exporter is configured through environment variables, the Flask application is started under the auto-instrumentation wrapper, and a single trace is verified in Grafana Explore.
 
+<p align="center"><img src="./images/otel-auto-instrumentation-flow.drawio.svg" alt="Flask app under opentelemetry-instrument wrapper, OTLP HTTP exporter, Tempo receiver, and Grafana Explore"></p>
+
 ## Table of Contents
 
 1. Chapter 1: Install OpenTelemetry Packages
@@ -47,7 +49,7 @@ You will use the OpenTelemetry auto-instrumentation wrapper, which inspects impo
 
 Open a terminal on Linux, macOS, or Windows. Use any text editor or Markdown viewer to read this file side by side.
 
-Create the lab folder and a virtual environment.
+Create the lab folder and a virtual environment. All commands below assume you are inside `lab-10-otel-python-instrumentation/`.
 
 ```bash
 mkdir -p lab-10-otel-python-instrumentation
@@ -84,10 +86,11 @@ pip install flask
 Confirm the Grafana and Tempo stack from Lab 9 is still running.
 
 ```bash
-docker compose -f ../lab-9-grafana-tempo-compose/docker-compose.yml ps
+docker --version
+docker compose version
 ```
 
-Both services should report `running` before you continue.
+The Lab 9 stack on `http://localhost:3000` (Grafana) and `http://localhost:4318` (Tempo OTLP) must be reachable before you continue.
 
 ## Chapter 1: Install OpenTelemetry Packages
 
@@ -100,14 +103,6 @@ Framework instrumentations live in dedicated packages such as `opentelemetry-ins
 ### What You Will Build
 
 You will install the distro package, the HTTP exporter, and the Flask instrumentation. You will then run the bootstrap command with the `-a install` flag to install every detected instrumentation library into the active environment.
-
-### Think First
-
-<details>
-<summary>Question: Why split OpenTelemetry into many small packages instead of one large SDK?</summary>
-
-Splitting into small packages keeps the runtime footprint minimal. An application only pays the import cost of the libraries it actually uses. A Flask app does not need to load FastAPI or gRPC instrumentation at startup.
-</details>
 
 ### Implementation
 
@@ -129,45 +124,16 @@ Auto-install every instrumentation library detected in the active environment. F
 opentelemetry-distro ___________ install
 ```
 
-<details>
-<summary>Reveal answer</summary>
+**Fill in the blanks**
 
-```bash
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http opentelemetry-instrumentation-flask
-```
+- Blank 1 — the Flask-specific instrumentation package.
+- Blank 2 — the command shipped by the distro that scans the environment and installs matching instrumentation packages.
 
-```bash
-opentelemetry-distro opentelemetry-bootstrap -a install
-```
-
-The first blank is `opentelemetry-instrumentation-flask`, the Flask-specific instrumentation library. The second blank is `opentelemetry-bootstrap`, the command shipped by the distro that scans the environment and installs matching instrumentation packages.
-</details>
-
-### Understanding the Code
+> **Answers:** blank 1 is `opentelemetry-instrumentation-flask`. Blank 2 is `opentelemetry-bootstrap` (run as `opentelemetry-distro opentelemetry-bootstrap -a install`).
 
 The first command installs three packages. `opentelemetry-distro` provides the wrapper scripts. `opentelemetry-exporter-otlp-proto-http` ships the HTTP exporter that posts spans to Tempo. `opentelemetry-instrumentation-flask` patches Flask at import time so each request becomes a span.
 
 The second command runs the bootstrap script. The `-a install` flag tells the script to invoke `pip install` for each detected instrumentation package. After it finishes, every supported library in the environment has its matching instrumentation installed.
-
-### Matching Exercise
-
-| Package | Function |
-|---------|----------|
-| opentelemetry-distro | Provides `opentelemetry-bootstrap` and `opentelemetry-instrument` |
-| opentelemetry-exporter-otlp-proto-http | Sends spans over OTLP HTTP to a backend |
-| opentelemetry-instrumentation-flask | Patches Flask to emit HTTP server spans |
-| opentelemetry-bootstrap | Detects packages and installs their instrumentations |
-
-<details>
-<summary>Reveal answers</summary>
-
-| Package | Function |
-|---------|----------|
-| opentelemetry-distro | Provides `opentelemetry-bootstrap` and `opentelemetry-instrument` |
-| opentelemetry-exporter-otlp-proto-http | Sends spans over OTLP HTTP to a backend |
-| opentelemetry-instrumentation-flask | Patches Flask to emit HTTP server spans |
-| opentelemetry-bootstrap | Detects packages and installs their instrumentations |
-</details>
 
 ### Test and Verify
 
@@ -181,10 +147,14 @@ The output should show the distro, exporter, Flask instrumentation, and several 
 
 ### Checkpoint
 
-- [ ] `opentelemetry-distro` is installed.
-- [ ] `opentelemetry-exporter-otlp-proto-http` is installed.
-- [ ] `opentelemetry-instrumentation-flask` is installed.
+- [ ] `opentelemetry-distro`, `opentelemetry-exporter-otlp-proto-http`, and `opentelemetry-instrumentation-flask` are installed.
 - [ ] `opentelemetry-bootstrap -a install` ran without error.
+
+### Screenshot
+
+> *Drop your screenshot at `./images/lab-10-ch1-pip-list-otel.png`.*
+
+<p align="center"><img src="./images/lab-10-ch1-pip-list-otel.png" alt="Screenshot TODO — pip list | grep opentelemetry showing all installed packages"></p>
 
 ## Chapter 2: Configure the OTLP Exporter
 
@@ -198,14 +168,6 @@ The exporter must know three things: the service name that identifies your appli
 
 You will export four environment variables before starting the API. They control the service name, the destination endpoint, the transport protocol, and the traces exporter type.
 
-### Think First
-
-<details>
-<summary>Prediction: Which environment variable controls the destination Tempo endpoint?</summary>
-
-The variable `OTEL_EXPORTER_OTLP_ENDPOINT` controls the destination URL. Setting it to `http://localhost:4318` points the exporter at the Tempo OTLP HTTP receiver from Lab 9. The variable is read by the OTLP exporter at startup.
-</details>
-
 ### Implementation
 
 Export the four variables. Fill in the three blanks.
@@ -217,20 +179,7 @@ export OTEL_TRACES_EXPORTER=___________
 export OTEL_EXPORTER_OTLP_PROTOCOL=___________
 ```
 
-<details>
-<summary>Reveal answer</summary>
-
-```bash
-export OTEL_SERVICE_NAME=my-api
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-export OTEL_TRACES_EXPORTER=otlp
-export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-```
-
-The first blank is `http://localhost:4318`, the URL of the Tempo OTLP HTTP receiver from Lab 9. The second blank is `otlp`, the value that selects the OTLP traces exporter. The third blank is `http/protobuf`, the protocol that matches the Tempo HTTP receiver configuration.
-</details>
-
-### Understanding the Code
+> **Answers:** `http://localhost:4318`, `otlp`, `http/protobuf`. The endpoint is the Tempo OTLP HTTP receiver from Lab 9.
 
 `OTEL_SERVICE_NAME` sets the `service.name` resource attribute that appears on every span from this process. `OTEL_EXPORTER_OTLP_ENDPOINT` sets the destination URL. `OTEL_TRACES_EXPORTER` selects the OTLP exporter as the trace sink. `OTEL_EXPORTER_OTLP_PROTOCOL` selects the HTTP transport with protobuf payloads, matching the Tempo receiver defined in `tempo.yml`.
 
@@ -242,14 +191,17 @@ Print the values to confirm they are set in the current shell.
 env | grep OTEL_
 ```
 
-The output should include all four variables with the values from the reveal block.
+The output should include all four variables with the values from the answers above.
 
 ### Checkpoint
 
-- [ ] `OTEL_SERVICE_NAME` is set to `my-api`.
-- [ ] `OTEL_EXPORTER_OTLP_ENDPOINT` points to the Tempo OTLP HTTP receiver.
-- [ ] `OTEL_TRACES_EXPORTER` is set to `otlp`.
-- [ ] `OTEL_EXPORTER_OTLP_PROTOCOL` is set to `http/protobuf`.
+- [ ] `env | grep OTEL_` shows all four variables with correct values.
+
+### Screenshot
+
+> *Drop your screenshot at `./images/lab-10-ch2-env-otel.png`.*
+
+<p align="center"><img src="./images/lab-10-ch2-env-otel.png" alt="Screenshot TODO — env | grep OTEL_ showing all four exported variables"></p>
 
 ## Chapter 3: Auto-Instrument and Verify Traces
 
@@ -263,16 +215,6 @@ Once the wrapped process is running, sending a request with curl produces a span
 
 You will start the Flask application under the `opentelemetry-instrument` wrapper, send one request with curl, and confirm the resulting trace in Grafana Explore using the Tempo datasource from Lab 9.
 
-<p align="center"><img src="./images/otel-auto-instrumentation-flow.drawio.svg" alt="Flask app under opentelemetry-instrument wrapper, OTLP HTTP exporter, Tempo receiver, and Grafana Explore"></p>
-
-### Think First
-
-<details>
-<summary>Question: Why use opentelemetry-instrument instead of importing OpenTelemetry in your application code?</summary>
-
-The wrapper applies instrumentation without any code changes. It also discovers and activates every instrumentation package present in the environment, so adding a new dependency such as `requests` immediately produces outbound HTTP client spans on the next start.
-</details>
-
 ### Implementation
 
 Start the application under the wrapper. Fill in the two blanks.
@@ -285,21 +227,7 @@ ___________ \
     -- python -m flask run --host=0.0.0.0 --port=5000
 ```
 
-<details>
-<summary>Reveal answer</summary>
-
-```bash
-opentelemetry-instrument \
-    --service_name my-api \
-    --exporter_otlp_endpoint http://localhost:4318 \
-    --exporter_otlp_protocol http/protobuf \
-    -- python -m flask run --host=0.0.0.0 --port=5000
-```
-
-The first blank is `opentelemetry-instrument`, the wrapper command that activates every installed instrumentation before launching your application. The second blank is `my-api`, the service name that will appear on every span in Grafana Explore. The `--` separator tells the wrapper which arguments belong to your application rather than to itself.
-</details>
-
-### Understanding the Code
+> **Answers:** blank 1 is `opentelemetry-instrument`. Blank 2 is `my-api` (the value you set in `OTEL_SERVICE_NAME`).
 
 The wrapper reads each flag and converts it into an environment variable before exec'ing your command. `--service_name` sets `OTEL_SERVICE_NAME`. `--exporter_otlp_endpoint` sets `OTEL_EXPORTER_OTLP_ENDPOINT`. `--exporter_otlp_protocol` sets `OTEL_EXPORTER_OTLP_PROTOCOL`. The `--` separator marks the end of wrapper flags. The `python -m flask run --host=0.0.0.0 --port=5000` portion is launched after instrumentation is active.
 
@@ -313,23 +241,23 @@ curl http://localhost:5000/hello
 
 The response should return the JSON payload from your Flask handler.
 
-<details>
-<summary>Prediction: Will a trace appear in Tempo if OTEL_EXPORTER_OTLP_PROTOCOL is set to grpc while Tempo only has the HTTP receiver configured?</summary>
-
-No trace appears in Tempo. The exporter attempts a gRPC connection on port 4317, which Tempo is not listening on, so every span export fails. Either change the protocol back to `http/protobuf` and ensure the OTLP HTTP receiver is enabled in Tempo, or enable the gRPC receiver on port 4317 in `tempo.yml`.
-</details>
-
 Open Grafana at http://localhost:3000 and click the Explore icon. Choose the `Tempo` datasource. Switch the query type to `Search` and enter the service name `my-api`. Click `Run query`. The trace for the `/hello` request should appear with attributes such as `http.method=GET` and `http.route=/hello`.
 
 ### Checkpoint
 
-- [ ] The Flask application starts under `opentelemetry-instrument`.
-- [ ] `curl http://localhost:5000/hello` returns a JSON response.
 - [ ] Grafana Explore lists at least one trace with service name `my-api`.
+
+### Screenshots
+
+> *Drop your screenshots at `./images/lab-10-ch3-curl-hello.png` and `./images/lab-10-ch3-grafana-explore.png`.*
+
+<p align="center"><img src="./images/lab-10-ch3-curl-hello.png" alt="Screenshot TODO — curl http://localhost:5000/hello returning the JSON payload"></p>
+
+<p align="center"><img src="./images/lab-10-ch3-grafana-explore.png" alt="Screenshot TODO — Grafana Explore listing a trace with service name my-api"></p>
 
 ### Experiment
 
-1. Stop the wrapped application.
+1. Stop the wrapped application with `Ctrl+C`.
 2. Set the endpoint to a port where nothing is listening.
 
 ```bash
@@ -350,12 +278,6 @@ curl http://localhost:5000/hello
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 ```
 
-<details>
-<summary>Question: What does the OTLP exporter log when the endpoint is unreachable?</summary>
-
-The exporter logs a connection refused error from the HTTP transport. Spans are dropped because the exporter cannot reach the destination. Restoring the correct endpoint to `http://localhost:4318` returns spans to Tempo on the next request.
-</details>
-
 ## Conclusion
 
 You installed the OpenTelemetry distro, the HTTP exporter, and the Flask instrumentation package. The bootstrap step auto-installed the remaining instrumentations for libraries already present in your environment. You then configured the exporter through environment variables that point at the Tempo OTLP HTTP receiver from Lab 9.
@@ -363,33 +285,3 @@ You installed the OpenTelemetry distro, the HTTP exporter, and the Flask instrum
 Running the Flask application under `opentelemetry-instrument` activated every installed instrumentation without code changes. A single curl request produced a span that appeared in Grafana Explore under the service name `my-api`. The unreachable-endpoint experiment demonstrated that the exporter logs and drops spans rather than crashing the application.
 
 This lab covered server-side auto-instrumentation only. You did not configure custom span attributes, manual span creation, or trace sampling rules. The next lab in this module adds outbound HTTP client instrumentation so calls between microservices produce linked parent and child spans.
-
-## The Principles
-
-- Configure the OpenTelemetry SDK through environment variables to keep instrumentation portable.
-- Use the distro wrapper to activate instrumentations without modifying application code.
-- Match the exporter protocol to the backend receiver configuration to avoid silent failures.
-- Treat auto-instrumentation as the baseline; add explicit spans only where the automatic data is insufficient.
-- Validate the full trace path with a single test request before deploying complex configurations.
-
-## Troubleshooting
-
-| Problem | Likely Cause | Resolution |
-|---------|--------------|------------|
-| pip install reports "No matching distribution" | Python version is older than 3.10 | Upgrade Python or use a newer virtual environment |
-| opentelemetry-instrument command not found | The distro package was not installed in the active venv | Run `pip install opentelemetry-distro` after activating the virtual environment |
-| No traces appear in Grafana Explore | Endpoint or protocol mismatch between exporter and Tempo | Confirm `OTEL_EXPORTER_OTLP_ENDPOINT` is `http://localhost:4318` and protocol is `http/protobuf` |
-| Exporter logs connection refused errors | OTLP endpoint points to a closed port | Restore the correct endpoint or open the target port on the receiver |
-| Application crashes at startup | Conflicting instrumentation versions in the environment | Run `pip list | grep opentelemetry` and align all packages on the same release line |
-
-## Next Steps
-
-The next lab instruments an outbound HTTP call from the Flask API to a second service. You will configure the client to propagate trace context so the receiving service continues the same trace, producing a single parent and child span pair in Grafana Explore.
-
-## Additional Resources
-
-- https://opentelemetry.io/docs/languages/python/
-- https://opentelemetry.io/docs/languages/python/automatic/
-- https://opentelemetry.io/docs/specs/otel/protocol/exporter/
-- https://opentelemetry-python.readthedocs.io/en/latest/exporter/otlp/otlp.html
-- https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation
