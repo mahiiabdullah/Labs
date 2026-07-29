@@ -96,8 +96,6 @@ Create `docker-compose.yml` with the following content. Run this heredoc from in
 
 ```bash
 cat > docker-compose.yml <<'EOF'
-version: "3.9"
-
 services:
   tempo:
     image: grafana/tempo:latest
@@ -244,13 +242,48 @@ Tail the logs from both services to confirm clean startup.
 
 ```bash
 docker compose logs tempo | head -20
-docker compose logs grafana | head -20
+docker compose logs grafana | head -40
 ```
+
+**If only `tempo-1` shows up in `docker compose ps` and Grafana is missing**, Grafana crashed during startup. The most common cause is a malformed provisioning YAML. Check the exit reason:
+
+```bash
+docker compose ps -a
+docker inspect lab-9-grafana-tempo-compose-grafana-1 --format '{{.State.Status}} {{.State.Error}}'
+docker compose logs grafana
+```
+
+The error message usually points at a YAML parse error in `grafana/provisioning/datasources/tempo.yaml` — re-check that file's contents:
+
+```bash
+cat grafana/provisioning/datasources/tempo.yaml
+```
+
+It must contain exactly:
+
+```yaml
+apiVersion: 1
+
+datasources:
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    isDefault: true
+    editable: true
+```
+
+If the file is correct but Grafana still exits, check whether port 3000 is already in use on the host:
+
+```bash
+sudo ss -ltnp | grep :3000
+```
+
+Anything listening on port 3000 will prevent Grafana from binding. Either stop the conflicting process or change the host-side port mapping in `docker-compose.yml` from `"3000:3000"` to e.g. `"3001:3000"` and visit `http://localhost:3001`.
 
 ### Checkpoint
 
-- [ ] `docker compose ps` shows both containers running after the restart.
-- [ ] No error lines appear in the first 20 lines of either service log.
+- [ ] `docker compose ps` shows both `tempo-1` and `grafana-1` in state `running`.
 
 ### Screenshot
 
