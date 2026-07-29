@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520" font-family="Inter, Helvetica, Arial, sans-serif">
+  <style>
+    @keyframes dash-flow { to { stroke-dashoffset: 0; } }
+    @keyframes pulse { 0% { stroke-opacity: 0.4; } 50% { stroke-opacity: 1; } 100% { stroke-opacity: 0.4; } }
+    .title { font-size: 30px; font-weight: 700; fill: #172033; text-anchor: middle; }
+    .subtitle { font-size: 16px; fill: #64748b; text-anchor: middle; }
+    .card-title { font-size: 22px; font-weight: 700; fill: #172033; text-anchor: middle; }
+    .card-sub { font-size: 15px; fill: #475569; text-anchor: middle; }
+    .card-tag { font: 12px Menlo, Consolas, monospace; fill: #64748b; text-anchor: middle; }
+    .edge-label-bg { fill: #fbfdff; }
+    .edge-label { font-size: 14px; font-weight: 600; fill: #475569; text-anchor: middle; }
+    .edge-metric { font: 12px Menlo, Consolas, monospace; fill: #ea580c; text-anchor: middle; font-weight: 600; }
+    .edge {
+      stroke: #64748b;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-dasharray: 9 8;
+      stroke-dashoffset: -17;
+      animation: dash-flow 700ms linear infinite;
+      fill: none;
+    }
+  </style>
+  <defs>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#94a3b8" flood-opacity="0.18"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#64748b"/></marker>
+  </defs>
+
+  <rect width="1100" height="520" fill="#fbfdff"/>
+  <text class="title" x="550" y="48">Tempo Service Graph</text>
+  <text class="subtitle" x="550" y="76">Nodes = services, edges = traffic with rolled-up latency</text>
+
+  <g id="flask-node" filter="url(#shadow)">
+    <rect x="160" y="170" width="240" height="180" rx="26" fill="#f4f0ff" stroke="#a78bfa" stroke-width="2"/>
+    <circle cx="208" cy="210" r="22" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+    <text x="208" y="218" font-size="20" font-weight="700" fill="#7c3aed" text-anchor="middle">F</text>
+    <text class="card-title" x="280" y="216">flask-api</text>
+    <text class="card-sub" x="280" y="244">HTTP server span</text>
+    <text class="card-tag" x="280" y="278">service.name = flask-api</text>
+    <text class="card-tag" x="280" y="300" font-style="italic">POST /process</text>
+  </g>
+
+  <g id="worker-node" filter="url(#shadow)">
+    <rect x="700" y="170" width="240" height="180" rx="26" fill="#fdf4ff" stroke="#e879f9" stroke-width="2"/>
+    <circle cx="748" cy="210" r="22" fill="#fae8ff" stroke="#c026d3" stroke-width="2"/>
+    <text x="748" y="218" font-size="20" font-weight="700" fill="#c026d3" text-anchor="middle">C</text>
+    <text class="card-title" x="820" y="216">celery-worker</text>
+    <text class="card-sub" x="820" y="244">child span</text>
+    <text class="card-tag" x="820" y="278">service.name = celery-worker</text>
+    <text class="card-tag" x="820" y="300" font-style="italic">celery-process</text>
+  </g>
+
+  <line class="edge" x1="400" y1="260" x2="692" y2="260" marker-end="url(#arrow)"/>
+  <rect x="450" y="220" width="200" height="34" rx="14" fill="#fbfdff"/>
+  <text class="edge-label" x="550" y="240">requests / sec</text>
+  <text class="edge-metric" x="550" y="254">p95 = 2.3s</text>
+
+  <text class="card-tag" x="550" y="478" font-style="italic">Aggregated metrics are derived from spans that share a trace_id, so latency and error rates are end-to-end accurate.</text>
+
+  <mxfile host="app.diagrams.net" type="device">
+    <diagram name="Service Graph" id="lab13-service-graph">
+      <mxGraphModel dx="1100" dy="520" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="520" math="0" shadow="1">
+        <root>
+          <mxCell id="0"/><mxCell id="1" parent="0"/>
+          <mxCell id="title" value="Tempo Service Graph" style="text;html=1;align=center;verticalAlign=middle;fontSize=30;fontStyle=1;fontColor=#172033;" vertex="1" parent="1"><mxGeometry x="350" y="18" width="400" height="42" as="geometry"/></mxCell>
+          <mxCell id="subtitle" value="Nodes = services, edges = traffic with rolled-up latency" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="280" y="62" width="540" height="28" as="geometry"/></mxCell>
+          <mxCell id="flask" value="flask-api&#10;&#10;HTTP server span&#10;&#10;service.name = flask-api&#10;POST /process" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#a78bfa;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=14;shadow=1;" vertex="1" parent="1"><mxGeometry x="160" y="170" width="240" height="180" as="geometry"/></mxCell>
+          <mxCell id="worker" value="celery-worker&#10;&#10;child span&#10;&#10;service.name = celery-worker&#10;celery-process" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdf4ff;strokeColor=#e879f9;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=14;shadow=1;" vertex="1" parent="1"><mxGeometry x="700" y="170" width="240" height="180" as="geometry"/></mxCell>
+          <mxCell id="traffic" value="requests / sec&#10;p95 = 2.3s" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=14;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;endFill=1;" edge="1" parent="1" source="flask" target="worker"><mxGeometry relative="1" as="geometry"><mxPoint x="0" y="-12" as="offset"/></mxGeometry></mxCell>
+          <mxCell id="note" value="Aggregated metrics are derived from spans that share a trace_id, so latency and error rates are end-to-end accurate." style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#64748b;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="180" y="460" width="740" height="28" as="geometry"/></mxCell>
+        </root>
+      </mxGraphModel>
+    </diagram>
+  </mxfile>
+</svg>
