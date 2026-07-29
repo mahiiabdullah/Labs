@@ -20,18 +20,28 @@ By the end of this lab you will be able to:
 - Run a Flask or FastAPI application under the auto-instrumentation wrapper.
 - Verify that incoming HTTP requests appear as traces in Grafana Tempo.
 
-### Prerequisites
+## Task Description
+
+In this lab, the OpenTelemetry distro is installed, the OTLP exporter is configured through environment variables, the Flask application is started under the auto-instrumentation wrapper, and a single trace is verified in Grafana Explore.
+
+## Table of Contents
+
+1. Chapter 1: Install OpenTelemetry Packages
+2. Chapter 2: Configure the OTLP Exporter
+3. Chapter 3: Auto-Instrument and Verify Traces
+
+## Architecture
+
+You join the same platform team from Lab 9. The tracing stack is running, but it is empty. The first microservice is a small Flask API that exposes a single endpoint. Your task is to instrument this API so every request emits a span into Tempo without modifying any application code.
+
+You will use the OpenTelemetry auto-instrumentation wrapper, which inspects imports at startup and patches supported libraries. After you trigger one request with curl, the corresponding trace must appear in Grafana Explore.
+
+## Prerequisites
 
 - Completion of Lab 9 with the Grafana and Tempo stack running on the host.
 - Python 3.10 or newer available on the host.
 - A simple Flask or FastAPI application with at least one HTTP route.
 - Basic familiarity with `pip` and Python virtual environments.
-
-## Prologue
-
-You join the same platform team from Lab 9. The tracing stack is running, but it is empty. The first microservice is a small Flask API that exposes a single endpoint. Your task is to instrument this API so every request emits a span into Tempo without modifying any application code.
-
-You will use the OpenTelemetry auto-instrumentation wrapper, which inspects imports at startup and patches supported libraries. After you trigger one request with curl, the corresponding trace must appear in Grafana Explore.
 
 ## Environment Setup
 
@@ -346,7 +356,7 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 The exporter logs a connection refused error from the HTTP transport. Spans are dropped because the exporter cannot reach the destination. Restoring the correct endpoint to `http://localhost:4318` returns spans to Tempo on the next request.
 </details>
 
-## Epilogue
+## Conclusion
 
 You installed the OpenTelemetry distro, the HTTP exporter, and the Flask instrumentation package. The bootstrap step auto-installed the remaining instrumentations for libraries already present in your environment. You then configured the exporter through environment variables that point at the Tempo OTLP HTTP receiver from Lab 9.
 
