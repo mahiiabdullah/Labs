@@ -20,18 +20,28 @@ By the end of this lab you will be able to:
 - Read the span hierarchy as a waterfall in Grafana Tempo.
 - Diagnose broken parent-child relationships caused by incorrect span activation.
 
-### Prerequisites
+## Task Description
+
+In this lab, a Flask API is extended with manual spans, custom attributes are recorded on each span, and the resulting hierarchy is verified in the Grafana Tempo waterfall.
+
+## Table of Contents
+
+1. Chapter 1: Create Your First Manual Span
+2. Chapter 2: Add Custom Business Attributes
+3. Chapter 3: Nest Child Spans
+
+## Architecture
+
+The team from Labs 9 and 10 now wants to know what happens inside each request. Auto-instrumentation records that the Flask route ran, but it does not show how long the database lookup took or whether the cache answered the request. Without that information, performance regressions slip through unnoticed.
+
+Your task is to wrap the handler logic in a manually created span, add child spans for the database and cache steps, and record business attributes on each span. After triggering a request, the trace must appear in Grafana Tempo with a clear parent-child waterfall and a populated attribute panel.
+
+## Prerequisites
 
 - Completion of Lab 9 with the Grafana and Tempo stack running.
 - Completion of Lab 10 with the Flask API instrumented under `opentelemetry-instrument`.
 - A Python 3.10 or newer virtual environment with `opentelemetry-distro` and `opentelemetry-instrumentation-flask` installed.
 - Familiarity with Python context managers and the `with` statement.
-
-## Prologue
-
-The team from Labs 9 and 10 now wants to know what happens inside each request. Auto-instrumentation records that the Flask route ran, but it does not show how long the database lookup took or whether the cache answered the request. Without that information, performance regressions slip through unnoticed.
-
-Your task is to wrap the handler logic in a manually created span, add child spans for the database and cache steps, and record business attributes on each span. After triggering a request, the trace must appear in Grafana Tempo with a clear parent-child waterfall and a populated attribute panel.
 
 ## Environment Setup
 
@@ -377,7 +387,7 @@ cache.end()
 `start_span()` creates a span but does not set it as the active span in the context. Each subsequent call has no parent in scope and falls back to creating a root span. The spans are exported independently, and Tempo groups them by trace ID, producing three unrelated traces instead of one hierarchical trace.
 </details>
 
-## Epilogue
+## Conclusion
 
 You extended the Flask API from Lab 10 with manual spans that capture the business workflow of each request. The `handle_request` span serves as the parent for two children: `db_lookup` for the database step and `cache_check` for the cache step. Each child carries attributes that describe its measured duration and its semantic type.
 
