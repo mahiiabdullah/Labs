@@ -20,14 +20,32 @@ By the end of this lab you will be able to:
 - Send a valid OTLP span payload using curl with the correct Content-Type header.
 - Query a trace by trace ID in Grafana Explore and verify the span landed in Tempo.
 
-### Prerequisites
+## Task Description
+
+In this lab, the stack is stood up, the Tempo datasource is provisioned, a single OTLP span is sent with curl, and the resulting trace is located in Grafana Explore.
+
+<p align="center"><img src="./images/grafana-tempo-compose-architecture.drawio.svg" alt="Compose stack architecture showing curl, Tempo OTLP receiver, Tempo storage, Grafana datasource, and Explore"></p>
+
+## Table of Contents
+
+1. Chapter 1: Write the Docker Compose Stack
+2. Chapter 2: Configure Tempo as a Grafana Datasource
+3. Chapter 3: Send a Trace and Verify in Grafana
+
+## Architecture
+
+You join the platform team at a mid-sized SaaS company that has just begun instrumenting its microservices. The first service is ready, but the team has no backend to receive spans and no dashboard to view them.
+
+Your task is to stand up a minimal tracing stack on a single host. You will use Grafana Tempo as the tracing backend and Grafana as the query interface. You must verify the pipeline end-to-end by sending a single test span with curl and observing it appear in Grafana.
+
+## Prerequisites
 
 - Familiarity with Docker and Docker Compose syntax.
 - A working Docker Engine installation with the Compose plugin.
 - Basic understanding of YAML configuration files.
 - Basic understanding of HTTP request methods and headers.
 
-## Prologue
+## Environment Setup
 
 You join the platform team at a mid-sized SaaS company that has just begun instrumenting its microservices. The first service is ready, but the team has no backend to receive spans and no dashboard to view them.
 
@@ -74,8 +92,6 @@ The two services you deploy have different roles. Tempo listens on port 3200 for
 ### What You Will Build
 
 You will create a `docker-compose.yml` file that defines the grafana and tempo services, exposes their ports to the host, and mounts configuration files into the containers.
-
-<p align="center"><img src="./images/grafana-tempo-compose-architecture.drawio.svg" alt="Compose stack architecture showing curl, Tempo OTLP receiver, Tempo storage, Grafana datasource, and Explore"></p>
 
 ### Think First
 
@@ -446,7 +462,7 @@ curl -X POST http://localhost:4318/v1/traces \
 Tempo returns HTTP 400 Bad Request. The OTLP receiver parses the JSON envelope and rejects requests that lack the required `resourceSpans` array. The response body contains a JSON error message describing the missing field. No trace is stored, so subsequent search queries return empty.
 </details>
 
-## Epilogue
+## Conclusion
 
 You deployed a minimal Grafana and Tempo stack on a single host using Docker Compose. You configured Tempo to accept OTLP HTTP spans on port 4318 and to store them in a local backend. You provisioned the Tempo datasource in Grafana through a YAML file, ensuring the datasource appears automatically on every startup.
 
