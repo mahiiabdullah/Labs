@@ -115,7 +115,7 @@ services:
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       - tempo
 
@@ -273,13 +273,13 @@ datasources:
     editable: true
 ```
 
-If the file is correct but Grafana still exits, check whether port 3000 is already in use on the host:
+If the file is correct but Grafana still exits, check whether port 3001 is already in use on the host:
 
 ```bash
-sudo ss -ltnp | grep :3000
+sudo ss -ltnp | grep :3001
 ```
 
-Anything listening on port 3000 will prevent Grafana from binding. Either stop the conflicting process or change the host-side port mapping in `docker-compose.yml` from `"3000:3000"` to e.g. `"3001:3000"` and visit `http://localhost:3001`.
+Anything listening on port 3001 will prevent Grafana from binding. Stop the conflicting process or change the host-side port mapping in `docker-compose.yml` from `"3001:3000"` to e.g. `"3002:3000"` and visit `http://localhost:3002`.
 
 ### Checkpoint
 
@@ -364,7 +364,7 @@ curl http://localhost:3200/api/search?query=lab-9-test
 
 The response should include the trace ID `4bf92f3577b34da6a3ce929d0e0e4736`.
 
-Open a browser to http://localhost:3000 and log in with `admin` / `admin`. Click the compass icon on the left to open Explore. Choose the `Tempo` datasource from the dropdown. Switch the query type to `Search` and enter the trace ID `4bf92f3577b34da6a3ce929d0e0e4736`. Click `Run query`. The trace `hello-trace` should appear with its timing bar.
+Open a browser to http://localhost:3001 and log in with `admin` / `admin`. Click the compass icon on the left to open Explore. Choose the `Tempo` datasource from the dropdown. Switch the query type to `Search` and enter the trace ID `4bf92f3577b34da6a3ce929d0e0e4736`. Click `Run query`. The trace `hello-trace` should appear with its timing bar.
 
 ### Checkpoint
 
