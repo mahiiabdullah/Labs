@@ -18,7 +18,6 @@
 
   <rect width="1500" height="760" fill="#fbfdff"/>
   <text class="title" x="750" y="52">Trace Context Propagation: Flask → Celery</text>
-  <text class="subtitle" x="750" y="82">A single trace spans the HTTP request and the background worker</text>
 
   <g id="client-card" filter="url(#shadow)">
     <rect x="60" y="160" width="260" height="190" rx="24" fill="#eef6ff" stroke="#93c5fd" stroke-width="1.8"/>
@@ -33,7 +32,7 @@
     <text class="card-title" x="595" y="215">Flask API</text>
     <text class="card-sub" x="595" y="247">server span active</text>
     <text class="card-code" x="595" y="287">propagate.inject(carrier)</text>
-    <text class="card-code" x="595" y="310">task.delay(item_id, carrier=carrier)</text>
+    <text class="card-code" x="595" y="310">task.delay(item, carrier)</text>
     <text class="card-sub" x="595" y="340" font-style="italic">Inject and dispatch</text>
   </g>
 
@@ -45,21 +44,21 @@
     <text class="card-sub" x="1010" y="332" font-style="italic">Hand off the work</text>
   </g>
 
-  <g id="worker-card" filter="url(#shadow)">
-    <rect x="450" y="500" width="290" height="200" rx="24" fill="#fdf4ff" stroke="#f0abfc" stroke-width="1.8"/>
-    <text class="card-title" x="595" y="555">Celery worker</text>
-    <text class="card-sub" x="595" y="587">extracts the carrier</text>
-    <text class="card-code" x="595" y="627">ctx = propagate.extract(carrier)</text>
-    <text class="card-code" x="595" y="650">with start_as_current_span(..., context=ctx)</text>
-    <text class="card-sub" x="595" y="680" font-style="italic">Continue the trace</text>
+  <g id="tempo-card" filter="url(#shadow)">
+    <rect x="450" y="500" width="290" height="200" rx="24" fill="#fff6e8" stroke="#fdba74" stroke-width="1.8"/>
+    <text class="card-title" x="595" y="555">Tempo</text>
+    <text class="card-sub" x="595" y="587">shared trace ID</text>
+    <text class="card-code" x="595" y="627">parent and child span</text>
+    <text class="card-sub" x="595" y="675" font-style="italic">Single trace in Grafana</text>
   </g>
 
-  <g id="tempo-card" filter="url(#shadow)">
-    <rect x="870" y="500" width="280" height="200" rx="24" fill="#fff6e8" stroke="#fdba74" stroke-width="1.8"/>
-    <text class="card-title" x="1010" y="560">Tempo</text>
-    <text class="card-sub" x="1010" y="592">shared trace ID</text>
-    <text class="card-code" x="1010" y="635">parent and child span</text>
-    <text class="card-sub" x="1010" y="675" font-style="italic">Single trace in Grafana</text>
+  <g id="worker-card" filter="url(#shadow)">
+    <rect x="870" y="500" width="280" height="200" rx="24" fill="#fdf4ff" stroke="#f0abfc" stroke-width="1.8"/>
+    <text class="card-title" x="1010" y="560">Celery worker</text>
+    <text class="card-sub" x="1010" y="592">extracts the carrier</text>
+    <text class="card-code" x="1010" y="635">ctx = propagate.extract(carrier)</text>
+    <text class="card-code" x="1010" y="650">start_as_current_span(ctx)</text>
+    <text class="card-sub" x="1010" y="680" font-style="italic">Continue the trace</text>
   </g>
 
   <line class="edge" x1="320" y1="255" x2="442" y2="255" marker-end="url(#arrow)"/>
@@ -70,34 +69,31 @@
   <rect x="755" y="228" width="94" height="27" rx="13" fill="#fbfdff"/>
   <text class="edge-label" x="802" y="247">enqueue</text>
 
-  <path class="edge" d="M 1010 350 L 1010 425 L 595 425 L 595 492" marker-end="url(#arrow)"/>
-  <rect x="745" y="408" width="120" height="27" rx="13" fill="#fbfdff"/>
-  <text class="edge-label" x="805" y="427">pick up task</text>
+  <line class="edge" x1="1010" y1="350" x2="1010" y2="492" marker-end="url(#arrow)"/>
+  <rect x="950" y="408" width="120" height="27" rx="13" fill="#fbfdff"/>
+  <text class="edge-label" x="1010" y="427">pick up task</text>
 
-  <line class="edge" x1="740" y1="600" x2="862" y2="600" marker-end="url(#arrow)"/>
-  <rect x="757" y="573" width="88" height="27" rx="13" fill="#fbfdff"/>
-  <text class="edge-label" x="801" y="592">export</text>
+  <line class="edge" x1="870" y1="600" x2="748" y2="600" marker-end="url(#arrow)"/>
+  <rect x="765" y="573" width="88" height="27" rx="13" fill="#fbfdff"/>
+  <text class="edge-label" x="809" y="592">export</text>
 
-  <text class="note" x="750" y="738">The carrier is a regular dict — header names like traceparent carry a single trace_id shared by both spans.</text>
-
+  
   <mxfile host="app.diagrams.net" type="device">
     <diagram name="Trace Propagation" id="lab12-propagation">
       <mxGraphModel dx="1500" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="760" math="0" shadow="1">
         <root>
           <mxCell id="0"/><mxCell id="1" parent="0"/>
           <mxCell id="title" value="Trace Context Propagation: Flask to Celery" style="text;html=1;align=center;verticalAlign=middle;fontSize=34;fontStyle=1;fontColor=#172033;" vertex="1" parent="1"><mxGeometry x="370" y="22" width="760" height="46" as="geometry"/></mxCell>
-          <mxCell id="subtitle" value="A single trace spans the HTTP request and the background worker" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="280" y="66" width="940" height="28" as="geometry"/></mxCell>
           <mxCell id="client" value="HTTP client&#10;&#10;initiates the request&#10;&#10;POST /process&#10;&#10;Send work request" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef6ff;strokeColor=#93c5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="60" y="160" width="260" height="190" as="geometry"/></mxCell>
-          <mxCell id="flask" value="Flask API&#10;&#10;server span active&#10;&#10;propagate.inject(carrier)&#10;task.delay(item_id, carrier=carrier)&#10;&#10;Inject and dispatch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="450" y="160" width="290" height="190" as="geometry"/></mxCell>
+          <mxCell id="flask" value="Flask API&#10;&#10;server span active&#10;&#10;propagate.inject(carrier)&#10;task.delay(item, carrier)&#10;&#10;Inject and dispatch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="450" y="160" width="290" height="190" as="geometry"/></mxCell>
           <mxCell id="broker" value="Redis broker&#10;&#10;Celery queue&#10;&#10;task message + carrier&#10;&#10;Hand off the work" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfeff;strokeColor=#67e8f9;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="870" y="160" width="280" height="190" as="geometry"/></mxCell>
-          <mxCell id="worker" value="Celery worker&#10;&#10;extracts the carrier&#10;&#10;ctx = propagate.extract(carrier)&#10;with start_as_current_span(..., context=ctx)&#10;&#10;Continue the trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdf4ff;strokeColor=#f0abfc;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="450" y="500" width="290" height="200" as="geometry"/></mxCell>
-          <mxCell id="tempo" value="Tempo&#10;&#10;shared trace ID&#10;&#10;parent and child span&#10;&#10;Single trace in Grafana" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff6e8;strokeColor=#fdba74;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="870" y="500" width="280" height="200" as="geometry"/></mxCell>
+          <mxCell id="tempo" value="Tempo&#10;&#10;shared trace ID&#10;&#10;parent and child span&#10;&#10;Single trace in Grafana" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff6e8;strokeColor=#fdba74;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="450" y="500" width="290" height="200" as="geometry"/></mxCell>
+          <mxCell id="worker" value="Celery worker&#10;&#10;extracts the carrier&#10;&#10;ctx = propagate.extract(carrier)&#10;start_as_current_span(ctx)&#10;&#10;Continue the trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdf4ff;strokeColor=#f0abfc;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="870" y="500" width="280" height="200" as="geometry"/></mxCell>
           <mxCell id="http" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="client" target="flask"><mxGeometry relative="1" as="geometry"/></mxCell>
           <mxCell id="enqueue" value="enqueue" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="flask" target="broker"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="pickup" value="pick up task" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="broker" target="worker"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1010" y="425"/><mxPoint x="595" y="425"/></Array></mxGeometry></mxCell>
+          <mxCell id="pickup" value="pick up task" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="broker" target="worker"><mxGeometry relative="1" as="geometry"/></mxCell>
           <mxCell id="export" value="export" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="worker" target="tempo"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="note" value="The carrier is a regular dict — header names like traceparent carry a single trace_id shared by both spans." style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#64748b;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="180" y="718" width="1140" height="28" as="geometry"/></mxCell>
-        </root>
+                  </root>
       </mxGraphModel>
     </diagram>
   </mxfile>

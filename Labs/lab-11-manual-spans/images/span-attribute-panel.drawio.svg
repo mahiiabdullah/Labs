@@ -54,8 +54,7 @@
   <text class="key" x="80" y="477">span.kind</text>
   <text class="value" x="400" y="477">"internal"</text>
 
-  <text class="note" x="550" y="550">Open one of the three spans in the waterfall to view its attribute panel in Grafana Explore.</text>
-
+  
   <mxfile host="app.diagrams.net" type="device">
     <diagram name="Attribute Panel" id="attr-1">
       <mxGraphModel dx="1100" dy="560" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="560" math="0" shadow="0">
@@ -83,10 +82,7 @@
             <mxGeometry x="60" y="402" width="980" height="110" as="geometry"/>
           </mxCell>
 
-          <mxCell id="7" value="Open one of the three spans in the waterfall to view its attribute panel in Grafana Explore." style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontColor=#555555;" vertex="1" parent="1">
-            <mxGeometry x="200" y="535" width="700" height="20" as="geometry"/>
-          </mxCell>
-        </root>
+                  </root>
       </mxGraphModel>
     </diagram>
   </mxfile>

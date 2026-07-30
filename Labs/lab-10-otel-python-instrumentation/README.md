@@ -4,6 +4,8 @@ Install the OpenTelemetry distro and HTTP exporter, run a Flask API under the au
 
 ![Architecture](./images/otel-auto-instrumentation-flow.drawio.svg)
 
+<!-- TODO: drop a real terminal screenshot here, e.g. ![Flask run with OTEL](./images/screenshot.png) -->
+
 ## What You Will Build
 
 - A virtual environment with `opentelemetry-distro`, the OTLP HTTP exporter, and Flask instrumentation.

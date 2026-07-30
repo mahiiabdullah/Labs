@@ -4,6 +4,8 @@ Inject the active trace context from a Flask endpoint into a Celery task and ext
 
 ![Architecture](./images/trace-propagation-flow.drawio.svg)
 
+<!-- TODO: drop a real terminal screenshot here, e.g. ![Celery worker consuming task](./images/screenshot.png) -->
+
 ## What You Will Build
 
 - A Flask API that enqueues Celery tasks through Redis.

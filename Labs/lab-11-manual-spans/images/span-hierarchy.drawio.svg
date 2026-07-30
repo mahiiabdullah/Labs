@@ -54,8 +54,6 @@
   <circle cx="240" cy="320" r="5" fill="#333333"/>
   <circle cx="760" cy="320" r="5" fill="#333333"/>
 
-  <text class="note" x="500" y="555">Each child span inherits its parent from the active OpenTelemetry context. No explicit parent ID is passed.</text>
-
   <mxfile host="app.diagrams.net" type="device">
     <diagram name="Span Hierarchy" id="hierarchy-1">
       <mxGraphModel dx="1000" dy="560" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="560" math="0" shadow="0">
@@ -86,9 +84,6 @@
             <mxGeometry relative="1" as="geometry"/>
           </mxCell>
 
-          <mxCell id="8" value="Each child span inherits its parent from the active OpenTelemetry context. No explicit parent ID is passed." style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontColor=#555555;" vertex="1" parent="1">
-            <mxGeometry x="100" y="540" width="800" height="20" as="geometry"/>
-          </mxCell>
         </root>
       </mxGraphModel>
     </diagram>

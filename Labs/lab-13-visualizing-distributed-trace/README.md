@@ -4,6 +4,8 @@ Expose the trace ID on the Flask response, open the trace in Grafana, and read t
 
 ![Architecture](./images/full-system-trace-flow.drawio.svg)
 
+<!-- TODO: drop a real Grafana screenshot here, e.g. ![Tempo waterfall in Grafana](./images/screenshot.png) -->
+
 ## What You Will Build
 
 - A Flask endpoint that exposes the trace ID under `X-Trace-ID`.

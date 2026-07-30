@@ -18,7 +18,6 @@
 
   <rect width="1500" height="760" fill="#fbfdff"/>
   <text class="title" x="750" y="52">OpenTelemetry Auto-Instrumentation Flow</text>
-  <text class="subtitle" x="750" y="82">Spans emitted without any tracing code in your application</text>
 
   <g id="app-card" filter="url(#shadow)">
     <rect x="70" y="160" width="290" height="200" rx="24" fill="#eef6ff" stroke="#93c5fd" stroke-width="1.8"/>
@@ -80,15 +79,12 @@
   <rect x="804" y="574" width="92" height="27" rx="13" fill="#fbfdff"/>
   <text class="edge-label" x="850" y="593">query :3200</text>
 
-  <text class="note" x="750" y="738">The wrapper and exporter are configured through standard OTEL_* environment variables — no application tracing code is required.</text>
-
   <mxfile host="app.diagrams.net" type="device">
     <diagram name="OTel Flow" id="lab10-otel-flow">
       <mxGraphModel dx="1500" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="760" math="0" shadow="1">
         <root>
           <mxCell id="0"/><mxCell id="1" parent="0"/>
           <mxCell id="title" value="OpenTelemetry Auto-Instrumentation Flow" style="text;html=1;align=center;verticalAlign=middle;fontSize=34;fontStyle=1;fontColor=#172033;" vertex="1" parent="1"><mxGeometry x="370" y="22" width="760" height="46" as="geometry"/></mxCell>
-          <mxCell id="subtitle" value="Spans emitted without any tracing code in your application" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="350" y="66" width="800" height="28" as="geometry"/></mxCell>
           <mxCell id="app" value="Flask application&#10;&#10;incoming HTTP request&#10;&#10;GET /hello&#10;&#10;Receive request" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef6ff;strokeColor=#93c5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="70" y="160" width="290" height="200" as="geometry"/></mxCell>
           <mxCell id="wrapper" value="Instrumentation wrapper&#10;&#10;patches Flask at startup&#10;&#10;opentelemetry-instrument&#10;&#10;Create server span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="490" y="160" width="290" height="200" as="geometry"/></mxCell>
           <mxCell id="exporter" value="OTLP HTTP exporter&#10;&#10;batches completed spans&#10;&#10;POST /v1/traces&#10;&#10;Export span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfeff;strokeColor=#67e8f9;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="910" y="160" width="290" height="200" as="geometry"/></mxCell>
@@ -98,7 +94,6 @@
           <mxCell id="batch" value="span batch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="wrapper" target="exporter"><mxGeometry relative="1" as="geometry"/></mxCell>
           <mxCell id="proto" value="http/protobuf" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="exporter" target="tempo"><mxGeometry relative="1" as="geometry"/></mxCell>
           <mxCell id="query" value="query :3200" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="tempo" target="grafana"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="note" value="The wrapper and exporter are configured through standard OTEL_* environment variables — no application tracing code is required." style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#64748b;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="180" y="718" width="1140" height="28" as="geometry"/></mxCell>
         </root>
       </mxGraphModel>
     </diagram>

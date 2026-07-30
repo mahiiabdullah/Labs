@@ -4,6 +4,8 @@ Deploy a Grafana and Tempo stack with Docker Compose, send a single OTLP span wi
 
 ![Architecture](./images/grafana-tempo-compose-architecture.drawio.svg)
 
+<!-- TODO: drop a real terminal screenshot here, e.g. ![Docker compose up](./images/screenshot.png) -->
+
 ## What You Will Build
 
 - A `docker-compose.yml` running Grafana on host port 3001 and Tempo on 3200 and 4318.

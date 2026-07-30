@@ -7,90 +7,88 @@
     .card-title { font-size: 22px; font-weight: 700; fill: #172033; text-anchor: middle; }
     .card-sub { font-size: 16px; fill: #475569; text-anchor: middle; }
     .card-code { font: 14px Menlo, Consolas, monospace; fill: #334155; text-anchor: middle; }
-    .edge-label { font-size: 15px; font-weight: 600; fill: #475569; text-anchor: middle; }
+    .edge-label { font-size: 16px; font-weight: 600; fill: #475569; text-anchor: middle; }
     .note { font-size: 14px; fill: #64748b; text-anchor: middle; font-style: italic; }
-    .edge { stroke: #64748b; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 8; stroke-dashoffset: -17; animation: dash-flow 700ms linear infinite; fill: none; }
+    .edge { stroke: #64748b; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 12 10; stroke-dashoffset: -22; animation: dash-flow 800ms linear infinite; fill: none; }
   </style>
   <defs>
     <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#94a3b8" flood-opacity="0.18"/></filter>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#64748b"/></marker>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M0 0 L12 6 L0 12 Z" fill="#64748b"/></marker>
   </defs>
 
   <rect width="1500" height="760" fill="#fbfdff"/>
   <text class="title" x="750" y="52">End-to-End Trace: Flask → Celery → Tempo → Grafana</text>
-  <text class="subtitle" x="750" y="82">One trace ID, two spans, one waterfall</text>
 
   <g id="client-card" filter="url(#shadow)">
-    <rect x="40" y="160" width="240" height="190" rx="24" fill="#eef6ff" stroke="#93c5fd" stroke-width="1.8"/>
-    <text class="card-title" x="160" y="220">HTTP client</text>
-    <text class="card-sub" x="160" y="252">triggers the request</text>
-    <text class="card-code" x="160" y="295">POST /process</text>
-    <text class="card-sub" x="160" y="332" font-style="italic">Start the trace</text>
+    <rect x="85" y="160" width="250" height="190" rx="24" fill="#eef6ff" stroke="#93c5fd" stroke-width="1.8"/>
+    <text class="card-title" x="210" y="220">HTTP client</text>
+    <text class="card-sub" x="210" y="252">triggers the request</text>
+    <text class="card-code" x="210" y="295">POST /process</text>
+    <text class="card-sub" x="210" y="332" font-style="italic">Start the trace</text>
   </g>
 
   <g id="flask-card" filter="url(#shadow)">
-    <rect x="320" y="160" width="270" height="190" rx="24" fill="#f4f0ff" stroke="#c4b5fd" stroke-width="1.8"/>
-    <text class="card-title" x="455" y="215">Flask API</text>
-    <text class="card-sub" x="455" y="247">span 1 — server</text>
-    <text class="card-code" x="455" y="285">trace_id = span.trace_id</text>
-    <text class="card-code" x="455" y="308">X-Trace-ID header</text>
-    <text class="card-sub" x="455" y="338" font-style="italic">Open and capture</text>
+    <rect x="615" y="160" width="270" height="190" rx="24" fill="#f4f0ff" stroke="#c4b5fd" stroke-width="1.8"/>
+    <text class="card-title" x="750" y="215">Flask API</text>
+    <text class="card-sub" x="750" y="247">span 1 — server</text>
+    <text class="card-code" x="750" y="287">trace_id = span.trace_id</text>
+    <text class="card-code" x="750" y="310">X-Trace-ID header</text>
+    <text class="card-sub" x="750" y="340" font-style="italic">Open and capture</text>
   </g>
 
   <g id="broker-card" filter="url(#shadow)">
-    <rect x="630" y="160" width="240" height="190" rx="24" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.8"/>
-    <text class="card-title" x="750" y="220">Redis broker</text>
-    <text class="card-sub" x="750" y="252">Celery queue</text>
-    <text class="card-code" x="750" y="295">task + carrier</text>
-    <text class="card-sub" x="750" y="332" font-style="italic">Hand off and wait</text>
-  </g>
-
-  <g id="worker-card" filter="url(#shadow)">
-    <rect x="910" y="160" width="260" height="190" rx="24" fill="#fdf4ff" stroke="#f0abfc" stroke-width="1.8"/>
-    <text class="card-title" x="1040" y="215">Celery worker</text>
-    <text class="card-sub" x="1040" y="247">span 2 — celery-process</text>
-    <text class="card-code" x="1040" y="285">propagate.extract(carrier)</text>
-    <text class="card-code" x="1040" y="308">start_as_current_span(...)</text>
-    <text class="card-sub" x="1040" y="338" font-style="italic">Continue the trace</text>
-  </g>
-
-  <g id="tempo-card" filter="url(#shadow)">
-    <rect x="1210" y="160" width="240" height="190" rx="24" fill="#fff6e8" stroke="#fdba74" stroke-width="1.8"/>
-    <text class="card-title" x="1330" y="220">Tempo</text>
-    <text class="card-sub" x="1330" y="252">indexed by trace ID</text>
-    <text class="card-code" x="1330" y="295">2 spans, 1 trace_id</text>
-    <text class="card-sub" x="1330" y="332" font-style="italic">Ready to query</text>
+    <rect x="1175" y="160" width="240" height="190" rx="24" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.8"/>
+    <text class="card-title" x="1295" y="220">Redis broker</text>
+    <text class="card-sub" x="1295" y="252">Celery queue</text>
+    <text class="card-code" x="1295" y="295">task + carrier</text>
+    <text class="card-sub" x="1295" y="332" font-style="italic">Hand off and wait</text>
   </g>
 
   <g id="grafana-card" filter="url(#shadow)">
-    <rect x="610" y="500" width="300" height="200" rx="24" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.8"/>
-    <text class="card-title" x="760" y="555">Grafana Explore</text>
-    <text class="card-sub" x="760" y="587">Tempo waterfall + service graph</text>
-    <text class="card-code" x="760" y="625">search by trace_id</text>
-    <text class="card-sub" x="760" y="675" font-style="italic">Identify the slowest span</text>
+    <rect x="85" y="500" width="250" height="200" rx="24" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.8"/>
+    <text class="card-title" x="210" y="560">Grafana Explore</text>
+    <text class="card-sub" x="210" y="592">waterfall + service graph</text>
+    <text class="card-code" x="210" y="635">search by trace_id</text>
+    <text class="card-sub" x="210" y="680" font-style="italic">Identify the slowest span</text>
   </g>
 
-  <line class="edge" x1="280" y1="255" x2="312" y2="255" marker-end="url(#arrow)"/>
-  <rect x="258" y="228" width="74" height="27" rx="13" fill="#fbfdff"/>
-  <text class="edge-label" x="295" y="247">HTTP</text>
+  <g id="tempo-card" filter="url(#shadow)">
+    <rect x="615" y="500" width="270" height="200" rx="24" fill="#fff6e8" stroke="#fdba74" stroke-width="1.8"/>
+    <text class="card-title" x="750" y="555">Tempo</text>
+    <text class="card-sub" x="750" y="587">indexed by trace ID</text>
+    <text class="card-code" x="750" y="627">2 spans, 1 trace_id</text>
+    <text class="card-sub" x="750" y="675" font-style="italic">Ready to query</text>
+  </g>
 
-  <line class="edge" x1="590" y1="255" x2="622" y2="255" marker-end="url(#arrow)"/>
-  <rect x="565" y="228" width="80" height="27" rx="13" fill="#fbfdff"/>
-  <text class="edge-label" x="605" y="247">enqueue</text>
+  <g id="worker-card" filter="url(#shadow)">
+    <rect x="1175" y="500" width="240" height="200" rx="24" fill="#fdf4ff" stroke="#f0abfc" stroke-width="1.8"/>
+    <text class="card-title" x="1295" y="555">Celery worker</text>
+    <text class="card-sub" x="1295" y="587">span 2 — celery-process</text>
+    <text class="card-code" x="1295" y="627">propagate.extract(carrier)</text>
+    <text class="card-code" x="1295" y="650">start_as_current_span(...)</text>
+    <text class="card-sub" x="1295" y="680" font-style="italic">Continue the trace</text>
+  </g>
 
-  <line class="edge" x1="870" y1="255" x2="902" y2="255" marker-end="url(#arrow)"/>
-  <rect x="845" y="228" width="80" height="27" rx="13" fill="#fbfdff"/>
-  <text class="edge-label" x="885" y="247">deliver</text>
+  <line class="edge" x1="335" y1="255" x2="607" y2="255" marker-end="url(#arrow)"/>
+  <rect x="432" y="222" width="86" height="30" rx="15" fill="#fbfdff"/>
+  <text class="edge-label" x="475" y="243">HTTP</text>
 
-  <line class="edge" x1="1170" y1="255" x2="1202" y2="255" marker-end="url(#arrow)"/>
-  <rect x="1144" y="228" width="84" height="27" rx="13" fill="#fbfdff"/>
-  <text class="edge-label" x="1186" y="247">export</text>
+  <line class="edge" x1="885" y1="255" x2="1167" y2="255" marker-end="url(#arrow)"/>
+  <rect x="975" y="222" width="102" height="30" rx="15" fill="#fbfdff"/>
+  <text class="edge-label" x="1026" y="243">enqueue</text>
 
-  <path class="edge" d="M 1330 350 L 1330 440 L 760 440 L 760 492" marker-end="url(#arrow)"/>
-  <rect x="1010" y="423" width="92" height="27" rx="13" fill="#fbfdff"/>
-  <text class="edge-label" x="1056" y="442">query</text>
+  <line class="edge" x1="1295" y1="350" x2="1295" y2="492" marker-end="url(#arrow)"/>
+  <rect x="1232" y="406" width="126" height="30" rx="15" fill="#fbfdff"/>
+  <text class="edge-label" x="1295" y="427">pick up task</text>
 
-  <text class="note" x="750" y="738">The X-Trace-ID response header gives you a deep link straight to the trace in Grafana.</text>
+  <line class="edge" x1="1175" y1="600" x2="893" y2="600" marker-end="url(#arrow)"/>
+  <rect x="982" y="568" width="102" height="30" rx="15" fill="#fbfdff"/>
+  <text class="edge-label" x="1033" y="589">export</text>
+
+  <line class="edge" x1="615" y1="600" x2="343" y2="600" marker-end="url(#arrow)"/>
+  <rect x="426" y="568" width="102" height="30" rx="15" fill="#fbfdff"/>
+  <text class="edge-label" x="477" y="589">query</text>
+
 
   <mxfile host="app.diagrams.net" type="device">
     <diagram name="Full System Trace" id="lab13-full-system">
@@ -98,20 +96,18 @@
         <root>
           <mxCell id="0"/><mxCell id="1" parent="0"/>
           <mxCell id="title" value="End-to-End Trace: Flask Celery Tempo Grafana" style="text;html=1;align=center;verticalAlign=middle;fontSize=34;fontStyle=1;fontColor=#172033;" vertex="1" parent="1"><mxGeometry x="370" y="22" width="760" height="46" as="geometry"/></mxCell>
-          <mxCell id="subtitle" value="One trace ID, two spans, one waterfall" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="500" y="66" width="500" height="28" as="geometry"/></mxCell>
-          <mxCell id="client" value="HTTP client&#10;&#10;triggers the request&#10;&#10;POST /process&#10;&#10;Start the trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef6ff;strokeColor=#93c5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="40" y="160" width="240" height="190" as="geometry"/></mxCell>
-          <mxCell id="flask" value="Flask API&#10;&#10;span 1 server&#10;&#10;trace_id = span.trace_id&#10;X-Trace-ID header&#10;&#10;Open and capture" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="320" y="160" width="270" height="190" as="geometry"/></mxCell>
-          <mxCell id="broker" value="Redis broker&#10;&#10;Celery queue&#10;&#10;task + carrier&#10;&#10;Hand off and wait" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfeff;strokeColor=#67e8f9;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="630" y="160" width="240" height="190" as="geometry"/></mxCell>
-          <mxCell id="worker" value="Celery worker&#10;&#10;span 2 celery-process&#10;&#10;propagate.extract(carrier)&#10;start_as_current_span(...)&#10;&#10;Continue the trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdf4ff;strokeColor=#f0abfc;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="910" y="160" width="260" height="190" as="geometry"/></mxCell>
-          <mxCell id="tempo" value="Tempo&#10;&#10;indexed by trace ID&#10;&#10;2 spans, 1 trace_id&#10;&#10;Ready to query" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff6e8;strokeColor=#fdba74;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="1210" y="160" width="240" height="190" as="geometry"/></mxCell>
-          <mxCell id="grafana" value="Grafana Explore&#10;&#10;Tempo waterfall + service graph&#10;&#10;search by trace_id&#10;&#10;Identify the slowest span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#6ee7b7;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="610" y="500" width="300" height="200" as="geometry"/></mxCell>
-          <mxCell id="http" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="client" target="flask"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="enqueue" value="enqueue" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="flask" target="broker"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="deliver" value="deliver" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="broker" target="worker"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="export" value="export" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="worker" target="tempo"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="query" value="query" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="tempo" target="grafana"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="note" value="The X-Trace-ID response header gives you a deep link straight to the trace in Grafana." style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#64748b;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="180" y="718" width="1140" height="28" as="geometry"/></mxCell>
-        </root>
+          <mxCell id="client" value="HTTP client&#10;&#10;triggers the request&#10;&#10;POST /process&#10;&#10;Start the trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef6ff;strokeColor=#93c5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="85" y="160" width="250" height="190" as="geometry"/></mxCell>
+          <mxCell id="flask" value="Flask API&#10;&#10;span 1 server&#10;&#10;trace_id = span.trace_id&#10;X-Trace-ID header&#10;&#10;Open and capture" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="615" y="160" width="270" height="190" as="geometry"/></mxCell>
+          <mxCell id="broker" value="Redis broker&#10;&#10;Celery queue&#10;&#10;task + carrier&#10;&#10;Hand off and wait" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfeff;strokeColor=#67e8f9;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="1175" y="160" width="240" height="190" as="geometry"/></mxCell>
+          <mxCell id="grafana" value="Grafana Explore&#10;&#10;waterfall + service graph&#10;&#10;search by trace_id&#10;&#10;Identify the slowest span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#6ee7b7;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="85" y="500" width="250" height="200" as="geometry"/></mxCell>
+          <mxCell id="tempo" value="Tempo&#10;&#10;indexed by trace ID&#10;&#10;2 spans, 1 trace_id&#10;&#10;Ready to query" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff6e8;strokeColor=#fdba74;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="615" y="500" width="270" height="200" as="geometry"/></mxCell>
+          <mxCell id="worker" value="Celery worker&#10;&#10;span 2 celery-process&#10;&#10;propagate.extract(carrier)&#10;start_as_current_span(...)&#10;&#10;Continue the trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdf4ff;strokeColor=#f0abfc;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="1175" y="500" width="240" height="200" as="geometry"/></mxCell>
+          <mxCell id="http" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=4;dashed=1;fontSize=16;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="client" target="flask"><mxGeometry relative="1" as="geometry"/></mxCell>
+          <mxCell id="enqueue" value="enqueue" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=4;dashed=1;fontSize=16;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="flask" target="broker"><mxGeometry relative="1" as="geometry"/></mxCell>
+          <mxCell id="pickup" value="pick up task" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=4;dashed=1;fontSize=16;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="broker" target="worker"><mxGeometry relative="1" as="geometry"/></mxCell>
+          <mxCell id="export" value="export" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=4;dashed=1;fontSize=16;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="worker" target="tempo"><mxGeometry relative="1" as="geometry"/></mxCell>
+          <mxCell id="query" value="query" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=4;dashed=1;fontSize=16;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="tempo" target="grafana"><mxGeometry relative="1" as="geometry"/></mxCell>
+                  </root>
       </mxGraphModel>
     </diagram>
   </mxfile>

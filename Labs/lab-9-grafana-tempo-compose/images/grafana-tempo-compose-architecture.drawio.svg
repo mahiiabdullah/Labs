@@ -18,7 +18,6 @@
 
   <rect width="1500" height="720" fill="#fbfdff"/>
   <text class="title" x="750" y="52">Grafana + Tempo Trace Architecture</text>
-  <text class="subtitle" x="750" y="82">From OTLP ingestion to trace exploration</text>
 
   <g id="curl-card" filter="url(#shadow)">
     <rect x="70" y="155" width="270" height="190" rx="24" fill="#eef6ff" stroke="#93c5fd" stroke-width="1.8"/>
@@ -64,15 +63,12 @@
   <rect x="1244" y="385" width="92" height="27" rx="13" fill="#fbfdff"/>
   <text class="edge-label" x="1290" y="404">query :3200</text>
 
-  <text class="note" x="750" y="696">Grafana resolves Tempo through Docker Compose DNS using the service hostname “tempo”.</text>
-
   <mxfile host="app.diagrams.net" type="device">
     <diagram name="Trace Architecture" id="lab9-architecture">
       <mxGraphModel dx="1500" dy="720" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="720" math="0" shadow="1">
         <root>
           <mxCell id="0"/><mxCell id="1" parent="0"/>
           <mxCell id="title" value="Grafana + Tempo Trace Architecture" style="text;html=1;align=center;verticalAlign=middle;fontSize=34;fontStyle=1;fontColor=#172033;" vertex="1" parent="1"><mxGeometry x="430" y="22" width="640" height="46" as="geometry"/></mxCell>
-          <mxCell id="subtitle" value="From OTLP ingestion to trace exploration" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#64748b;" vertex="1" parent="1"><mxGeometry x="500" y="66" width="500" height="28" as="geometry"/></mxCell>
           <mxCell id="curl" value="curl client&#10;&#10;OTLP HTTP request&#10;&#10;POST /v1/traces&#10;&#10;Send a test span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef6ff;strokeColor=#93c5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=13;shadow=1;" vertex="1" parent="1"><mxGeometry x="70" y="155" width="270" height="190" as="geometry"/></mxCell>
           <mxCell id="receiver" value="Tempo receiver&#10;&#10;OTLP HTTP ingestion&#10;&#10;0.0.0.0:4318&#10;&#10;Validate and ingest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=13;shadow=1;" vertex="1" parent="1"><mxGeometry x="485" y="155" width="270" height="190" as="geometry"/></mxCell>
           <mxCell id="storage" value="Tempo storage&#10;&#10;Local trace backend&#10;&#10;/var/tempo/traces&#10;&#10;Persist spans" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=13;shadow=1;" vertex="1" parent="1"><mxGeometry x="900" y="155" width="270" height="190" as="geometry"/></mxCell>
@@ -80,7 +76,6 @@
           <mxCell id="ingest" value="port 4318" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="curl" target="receiver"><mxGeometry relative="1" as="geometry"/></mxCell>
           <mxCell id="write" value="write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="receiver" target="storage"><mxGeometry relative="1" as="geometry"/></mxCell>
           <mxCell id="query" value="query :3200" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="storage" target="grafana"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1290" y="250"/><mxPoint x="1290" y="560"/></Array></mxGeometry></mxCell>
-          <mxCell id="note" value="Grafana resolves Tempo through Docker Compose DNS using the service hostname tempo." style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#64748b;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="300" y="676" width="900" height="28" as="geometry"/></mxCell>
         </root>
       </mxGraphModel>
     </diagram>

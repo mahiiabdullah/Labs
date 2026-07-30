@@ -69,9 +69,7 @@
   <text class="bar-text" x="710" y="330">10 ms</text>
   <text class="meta" x="1000" y="335">c3d4e5f6a7b8</text>
 
-  <!-- Bar duration legend -->
-  <text class="meta" x="60" y="395">Bar width represents elapsed time. Click any bar to open the attribute panel on the right side of the Explore view.</text>
-
+  
   <!-- draw.io editable model -->
   <mxfile host="app.diagrams.net" type="device">
     <diagram name="Waterfall" id="water-1">
@@ -109,10 +107,7 @@
             <mxGeometry x="680" y="315" width="60" height="20" as="geometry"/>
           </mxCell>
 
-          <mxCell id="10" value="Bar width represents elapsed time. Click any bar to open the attribute panel on the right side of the Explore view." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
-            <mxGeometry x="40" y="385" width="900" height="20" as="geometry"/>
-          </mxCell>
-        </root>
+                  </root>
       </mxGraphModel>
     </diagram>
   </mxfile>

@@ -4,6 +4,8 @@ Wrap a Flask route in `tracer.start_as_current_span`, attach domain attributes, 
 
 ![Architecture](./images/span-hierarchy.drawio.svg)
 
+<!-- TODO: drop a real terminal screenshot here, e.g. ![Flask request with spans](./images/screenshot.png) -->
+
 ## What You Will Build
 
 - A Flask route with a root `handle_request` span.
