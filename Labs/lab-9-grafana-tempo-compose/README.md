@@ -160,7 +160,7 @@ The output should list both `grafana` and `tempo` with state `running`. If you s
 
 > *Drop your screenshot at `./images/lab-9-ch1-docker-compose-ps.png`.*
 
-<p align="center"><img src="./images/lab-9-ch1-docker-compose-ps.png" alt="Screenshot TODO — docker compose ps showing grafana and tempo in state running"></p>
+<p align="center"><img src="./images/lab-9-ch1-docker-compose-ps.png" alt="Terminal showing docker compose ps after the first docker compose up -d — grafana-1 container running on 0.0.0.0:3001->3000/tcp and tempo-1 running on 0.0.0.0:3200->3200/tcp and 0.0.0.0:4318->4318/tcp"></p>
 
 ## Chapter 2: Configure Tempo as a Grafana Datasource
 
@@ -289,7 +289,7 @@ Anything listening on port 3001 will prevent Grafana from binding. Stop the conf
 
 > *Drop your screenshot at `./images/lab-9-ch2-docker-logs.png`.*
 
-<p align="center"><img src="./images/lab-9-ch2-docker-logs.png" alt="Screenshot TODO — docker compose logs tempo and grafana showing clean startup"></p>
+<p align="center"><img src="./images/lab-9-ch2-docker-logs.png" alt="Terminal showing docker compose ps after docker compose down and docker compose up -d — grafana-1 and tempo-1 both in Up state with port 3001, 3200, and 4318 mapped"></p>
 
 ## Chapter 3: Send a Trace and Verify in Grafana
 
@@ -356,15 +356,25 @@ Curl's `--data-binary` flag preserves the exact bytes of the file, unlike `-d` w
 
 ### Test and Verify
 
-After sending the span, query Tempo directly to confirm ingestion.
+After sending the span, retrieve it from Tempo using the trace-by-id API:
 
 ```bash
-curl http://localhost:3200/api/search?query=lab-9-test
+curl http://localhost:3200/api/traces/4bf92f3577b34da6a3ce929d0e0e4736
 ```
 
-The response should include the trace ID `4bf92f3577b34da6a3ce929d0e0e4736`.
+The response is a JSON envelope containing `{"traceID":"4bf92f3577b34da6a3ce929d0e0e4736"}` and the full span set. Any non-error response (HTTP 200) confirms Tempo accepted the span.
 
-Open a browser to http://localhost:3001 and log in with `admin` / `admin`. Click the compass icon on the left to open Explore. Choose the `Tempo` datasource from the dropdown. Switch the query type to `Search` and enter the trace ID `4bf92f3577b34da6a3ce929d0e0e4736`. Click `Run query`. The trace `hello-trace` should appear with its timing bar.
+To search by service name across all stored traces, use the TraceQL endpoint. The older `?query=` text search was removed in Tempo 3.x; the modern equivalent is:
+
+```bash
+curl -G http://localhost:3200/api/search \
+  --data-urlencode 'q={ resource.service.name = "lab-9-test" }' \
+  -H 'Accept: application/json'
+```
+
+The response lists matching traces with their trace IDs and metadata. `{ resource.service.name = "..." }` is a TraceQL filter — same syntax used in Grafana's TraceQL query field.
+
+Open a browser to http://localhost:3001 and log in with `admin` / `admin`. Click the compass icon on the left to open Explore. Choose the `Tempo` datasource from the dropdown. Switch the query type to **Search** and enter the trace ID `4bf92f3577b34da6a3ce929d0e0e4736`. Click `Run query`. The trace `hello-trace` should appear with its timing bar.
 
 ### Checkpoint
 
@@ -395,6 +405,12 @@ curl -X POST http://localhost:4318/v1/traces \
 ```
 
 The response should be `HTTP/1.1 400 Bad Request`. Tempo validates the JSON envelope and rejects payloads that lack the required `resourceSpans` array. No trace is stored.
+
+To confirm no trace was created, query the trace-by-id endpoint using a random hex string — Tempo returns 404.
+
+```bash
+curl -i http://localhost:3200/api/traces/00000000000000000000000000000001
+```
 
 ## Conclusion
 
