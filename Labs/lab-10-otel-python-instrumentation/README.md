@@ -12,8 +12,12 @@ Install the OpenTelemetry distro and HTTP exporter, run a Flask API under the au
 
 ## Prerequisites
 
-- Lab 9 stack running locally (Tempo on 4318, Grafana on 3001) **and** exposed through the lab load balancer.
-- Python 3.10 or newer with pip. On Debian/Ubuntu lab images, install `sudo apt install -y python3.12-venv python3-pip` first.
+- Lab 9 stack running **on a different container** and exposed through the lab load balancer. Lab 10's wrapper sends spans to Tempo over the load balancer, not over `localhost`.
+- The Load Balancer modal on this container must already expose:
+  - `4318` (Tempo OTLP) on `LB_IP`
+  - `3200` (Tempo query) on `LB_IP`
+  - `3001` (Grafana UI) on `LB_IP`
+- Python 3.10 or newer with pip. On Debian/Ubuntu lab images, install `sudo apt install -y python3-venv python3-pip` first.
 
 ## Step 1 — Create the project and a Flask app
 
@@ -56,21 +60,22 @@ In recent versions of `opentelemetry-distro` the `opentelemetry-distro` console 
 
 ```bash
 pip install opentelemetry-instrumentation-requests \
-            opentelemetry-instrumentation-urllib3 \
-            opentelemetry-instrumentation-werkzeug
+            opentelemetry-instrumentation-urllib3
 ```
 ```bash
 pip list | grep opentelemetry
 ```
 ![](./images/output-2.png)
 
-The list should include `-distro`, `-exporter-otlp-proto-http`, `-instrumentation-flask`, plus `-requests`, `-urllib3`, and `-werkzeug`.
+The list should include `-distro`, `-exporter-otlp-proto-http`, `-instrumentation-flask`, `-instrumentation-wsgi` (pulled in by `-flask`), plus `-requests` and `-urllib3`.
 
 ## Step 3 — Configure the OTLP exporter
 
+The wrapper sends spans to Tempo over the load balancer. Replace `<LB_IP>` with the IP you exposed Tempo on in Lab 9 (the **first** address from `hostname -I`).
+
 ```bash
 export OTEL_SERVICE_NAME=my-api
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://<LB_IP>:4318
 export OTEL_TRACES_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 ```
@@ -79,7 +84,7 @@ env | grep OTEL_
 ```
 ![](./images/output-3.png)
 
-Four lines should print with the values above. `OTEL_SERVICE_NAME` sets the `service.name` resource attribute that Tempo will display.
+Four lines should print with the values above. `OTEL_SERVICE_NAME` sets the `service.name` resource attribute that Tempo will display. `OTEL_EXPORTER_OTLP_ENDPOINT` must use `<LB_IP>:4318`, **not** `localhost`, because Tempo lives on a different container reachable only through the load balancer.
 
 ## Step 4 — Expose the Flask port through the load balancer
 
@@ -95,19 +100,25 @@ Use the **first** IP printed as `LB_IP`. Expose:
 |---|---|
 | `LB_IP` | `5000` (Flask API) |
 
-Lab 9 must already have exposed `4318`, `3200`, and `3001` for the rest of this lab to work.
+The same `LB_IP` value must already have `4318`, `3200`, and `3001` exposed from Lab 9 for the rest of this lab to work.
 
 ## Step 5 — Run the app under the wrapper
 
+Run the wrapped Flask in the background so it survives the next `curl` command. Stop it with `kill %1` (or `pkill -f 'flask run'`) when you finish.
+
 ```bash
-opentelemetry-instrument \
+nohup opentelemetry-instrument \
     --service_name my-api \
-    --exporter_otlp_endpoint http://localhost:4318 \
+    --exporter_otlp_endpoint http://<LB_IP>:4318 \
     --exporter_otlp_protocol http/protobuf \
-    -- python -m flask run --host=0.0.0.0 --port=5000
+    -- python -m flask run --host=0.0.0.0 --port=5000 \
+    > /tmp/flask.log 2>&1 &
+
+sleep 3
+tail -n 5 /tmp/flask.log
 ```
 
-The wrapper injects bytecode at import time so every Flask request becomes a span.
+You should see `Running on http://0.0.0.0:5000`. The wrapper injects bytecode at import time so every Flask request becomes a span, and sends them to `<LB_IP>:4318` through the load balancer.
 
 ## Step 6 — Send one request through the load balancer
 
