@@ -4,8 +4,6 @@ Install the OpenTelemetry distro and HTTP exporter, run a Flask API under the au
 
 ![Architecture](./images/otel-auto-instrumentation-flow.drawio.svg)
 
-<!-- TODO: drop a real terminal screenshot here, e.g. ![Flask run with OTEL](./images/screenshot.png) -->
-
 ## What You Will Build
 
 - A virtual environment with `opentelemetry-distro`, the OTLP HTTP exporter, and Flask instrumentation.
@@ -14,9 +12,8 @@ Install the OpenTelemetry distro and HTTP exporter, run a Flask API under the au
 
 ## Prerequisites
 
-- Lab 9 stack running on `http://localhost:4318` and `http://localhost:3001`.
+- Lab 9 stack running locally (Tempo on 4318, Grafana on 3001) **and** exposed through the lab load balancer.
 - Python 3.10 or newer with pip.
-- A clean working directory on the host.
 
 ## Step 1 — Create the project and a Flask app
 
@@ -76,7 +73,23 @@ env | grep OTEL_
 
 Four lines should print with the values above. `OTEL_SERVICE_NAME` sets the `service.name` resource attribute that Tempo will display.
 
-## Step 4 — Run the app under the wrapper
+## Step 4 — Expose the Flask port through the load balancer
+
+Open the **Load Balancer** modal in the lab UI. Run this once to find the IP to enter:
+
+```bash
+hostname -I
+```
+
+Use the **first** IP printed as `LB_IP`. Expose:
+
+| Enter IP | Enter Port |
+|---|---|
+| `LB_IP` | `5000` (Flask API) |
+
+Lab 9 must already have exposed `4318`, `3200`, and `3001` for the rest of this lab to work.
+
+## Step 5 — Run the app under the wrapper
 
 ```bash
 opentelemetry-instrument \
@@ -88,29 +101,22 @@ opentelemetry-instrument \
 
 The wrapper injects bytecode at import time so every Flask request becomes a span.
 
-## Step 5 — Send one request
+## Step 6 — Send one request through the load balancer
 
 ```bash
-curl http://localhost:5000/hello
+curl http://<LB_IP>:5000/hello
 ```
 ![](./images/output-4.png)
 
 The JSON payload from the Flask handler should return. The wrapper has already exported the matching span to Tempo.
 
-## Step 6 — View the trace in Grafana
+## Step 7 — View the trace in Grafana
 
-Open `http://localhost:3001`, choose Explore, select the `Tempo` datasource, switch to **Search**, enter `my-api`, and click **Run query**.
+Open `http://<LB_IP>:3001` in your browser, choose Explore, select the `Tempo` datasource, switch to **Search**, enter `my-api`, and click **Run query**.
 ![](./images/output-5.png)
 
 The trace for `/hello` should appear with attributes such as `http.method=GET` and `http.route=/hello`.
 
-## Checkpoint
-
-- [ ] `env | grep OTEL_` shows all four variables.
-- [ ] The wrapped Flask process is running on port 5000.
-- [ ] `curl /hello` returns the JSON response.
-- [ ] Grafana Explore lists at least one trace for service `my-api`.
-
 ## Next Steps
 
-Stop the wrapped process with `Ctrl+C` when you finish. Lab 11 adds manual spans with `tracer.start_as_current_span` and custom attributes.
+Stop the wrapped process with `Ctrl+C` when you finish. Remove the `5000` port from the Load Balancer modal. Lab 11 adds manual spans with `tracer.start_as_current_span` and custom attributes.

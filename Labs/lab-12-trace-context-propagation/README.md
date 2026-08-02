@@ -4,8 +4,6 @@ Inject the active trace context from a Flask endpoint into a Celery task and ext
 
 ![Architecture](./images/trace-propagation-flow.drawio.svg)
 
-<!-- TODO: drop a real terminal screenshot here, e.g. ![Celery worker consuming task](./images/screenshot.png) -->
-
 ## What You Will Build
 
 - A Flask API that enqueues Celery tasks through Redis.
@@ -14,8 +12,7 @@ Inject the active trace context from a Flask endpoint into a Celery task and ext
 
 ## Prerequisites
 
-- Lab 9 stack running on `http://localhost:4318` and `http://localhost:3001`.
-- Lab 10 API exported to the same Tempo.
+- Lab 9 stack running locally (Tempo on 4318, Grafana on 3001) **and** exposed through the lab load balancer.
 - Redis running on `localhost:6379`.
 - Python 3.10 or newer with pip.
 
@@ -135,10 +132,26 @@ opentelemetry-instrument --service_name=flask-api \
 
 The worker should print `ready`. The Flask API should answer on `http://localhost:8000`.
 
-## Step 5 — Trigger a request
+## Step 5 — Expose the Flask port through the load balancer
+
+Open the **Load Balancer** modal in the lab UI. Run this once to find the IP to enter:
 
 ```bash
-curl -i -X POST http://localhost:8000/process \
+hostname -I
+```
+
+Use the **first** IP printed as `LB_IP`. Expose:
+
+| Enter IP | Enter Port |
+|---|---|
+| `LB_IP` | `8000` (Flask API) |
+
+Lab 9 must already have exposed `4318`, `3200`, and `3001` for the rest of this lab to work.
+
+## Step 6 — Trigger a request
+
+```bash
+curl -i -X POST http://<LB_IP>:8000/process \
   -H "Content-Type: application/json" \
   -d '{"item_id": 42}'
 ```
@@ -146,20 +159,13 @@ curl -i -X POST http://localhost:8000/process \
 
 Save the `trace_id` from the JSON body. Both spans will share this ID.
 
-## Step 6 — Verify a single trace in Tempo
+## Step 7 — Verify a single trace in Tempo
 
-Open `http://localhost:3001`, choose the Tempo datasource, switch to **Search**, paste the `trace_id`, and click **Run query**.
+Open `http://<LB_IP>:3001`, choose the Tempo datasource, switch to **Search**, paste the `trace_id`, and click **Run query**.
 ![](./images/output-4.png)
 
 Exactly two spans appear: `POST /process` as the root and `celery-process` as a child with `item.id` and `worker.hostname` attributes.
 
-## Checkpoint
-
-- [ ] Redis is running and the worker reports `ready`.
-- [ ] The Flask API responds on `http://localhost:8000/process`.
-- [ ] `curl` returns a 32-character hex `trace_id`.
-- [ ] Tempo search by `trace_id` returns one trace with both `POST /process` and `celery-process`.
-
 ## Next Steps
 
-Stop the worker and API with `Ctrl+C`. Lab 13 exposes the trace ID on the response header and uses the service graph to read aggregate latency.
+Stop the worker and API with `Ctrl+C`. Remove the `8000` port from the Load Balancer modal. Lab 13 exposes the trace ID on the response header and uses the service graph to read aggregate latency.

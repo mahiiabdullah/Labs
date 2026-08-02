@@ -4,8 +4,6 @@ Wrap a Flask route in `tracer.start_as_current_span`, attach domain attributes, 
 
 ![Architecture](./images/span-hierarchy.drawio.svg)
 
-<!-- TODO: drop a real terminal screenshot here, e.g. ![Flask request with spans](./images/screenshot.png) -->
-
 ## What You Will Build
 
 - A Flask route with a root `handle_request` span.
@@ -14,7 +12,7 @@ Wrap a Flask route in `tracer.start_as_current_span`, attach domain attributes, 
 
 ## Prerequisites
 
-- Lab 9 stack running on `http://localhost:4318` and `http://localhost:3001`.
+- Lab 9 stack running locally (Tempo on 4318, Grafana on 3001) **and** exposed through the lab load balancer.
 - Lab 10 project (`lab-10-otel-python-instrumentation`) with its virtual environment active.
 - Python 3.10 or newer.
 
@@ -59,7 +57,23 @@ EOF
 
 `start_as_current_span` activates the span for the duration of the `with` block. Any nested spans created inside automatically attach as children. `set_attribute` accepts strings, numbers, and booleans.
 
-## Step 3 — Run the app and trigger a request
+## Step 3 — Expose the Flask port through the load balancer
+
+Open the **Load Balancer** modal in the lab UI. Run this once to find the IP to enter:
+
+```bash
+hostname -I
+```
+
+Use the **first** IP printed as `LB_IP`. Expose:
+
+| Enter IP | Enter Port |
+|---|---|
+| `LB_IP` | `5000` (Flask API) |
+
+Lab 9 must already have exposed `4318`, `3200`, and `3001` for the rest of this lab to work.
+
+## Step 4 — Run the app and trigger a request
 
 ```bash
 export OTEL_SERVICE_NAME=my-api
@@ -74,20 +88,20 @@ opentelemetry-instrument \
     -- python -m flask run --host=0.0.0.0 --port=5000
 ```
 ```bash
-curl http://localhost:5000/hello
+curl http://<LB_IP>:5000/hello
 ```
 ![](./images/output-1.png)
 
 The Flask handler returns the JSON payload. The wrapper exports the trace to Tempo.
 
-## Step 4 — Verify the span in Grafana
+## Step 5 — Verify the span in Grafana
 
-Open `http://localhost:3001`, click Explore, pick the `Tempo` datasource, switch to **Search**, enter `my-api`, and click **Run query**.
+Open `http://<LB_IP>:3001`, click Explore, pick the `Tempo` datasource, switch to **Search**, enter `my-api`, and click **Run query**.
 ![](./images/output-2.png)
 
 The `handle_request` span should appear with `user.id`, `request.id`, and `db.query_time_ms` in its attribute panel.
 
-## Step 5 — Add nested child spans
+## Step 6 — Add nested child spans
 
 ```bash
 cat > app.py <<'EOF'
@@ -129,24 +143,17 @@ EOF
 
 Inner `start_as_current_span` calls attach to the currently active span. The `db_lookup` and `cache_check` spans become siblings under `handle_request`.
 
-## Step 6 — Verify the waterfall
+## Step 7 — Verify the waterfall
 
-Restart the wrapped Flask process, trigger one request, and reload the trace in Grafana.
+Restart the wrapped Flask process, trigger one request through the load balancer, and reload the trace in Grafana.
 
 ```bash
-curl http://localhost:5000/hello
+curl http://<LB_IP>:5000/hello
 ```
 ![](./images/output-3.png)
 
 The waterfall should show three rows: `handle_request` at the top, then `db_lookup` and `cache_check` indented underneath.
 
-## Checkpoint
-
-- [ ] The `handle_request` span is visible in Grafana Explore.
-- [ ] `user.id`, `request.id`, and `db.query_time_ms` are listed on the root span.
-- [ ] `db_lookup` and `cache_check` appear as children of `handle_request`.
-- [ ] Each child span carries its own duration attribute.
-
 ## Next Steps
 
-Stop the wrapped process with `Ctrl+C`. Lab 12 propagates the trace context from a Flask request into a Celery worker over Redis.
+Stop the wrapped process with `Ctrl+C`. Remove the `5000` port from the Load Balancer modal. Lab 12 propagates the trace context from a Flask request into a Celery worker over Redis.

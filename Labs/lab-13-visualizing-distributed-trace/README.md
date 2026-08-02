@@ -4,8 +4,6 @@ Expose the trace ID on the Flask response, open the trace in Grafana, and read t
 
 ![Architecture](./images/full-system-trace-flow.drawio.svg)
 
-<!-- TODO: drop a real Grafana screenshot here, e.g. ![Tempo waterfall in Grafana](./images/screenshot.png) -->
-
 ## What You Will Build
 
 - A Flask endpoint that exposes the trace ID under `X-Trace-ID`.
@@ -14,7 +12,7 @@ Expose the trace ID on the Flask response, open the trace in Grafana, and read t
 
 ## Prerequisites
 
-- Labs 9 through 12 complete: Tempo on `http://localhost:4318`, Grafana on `http://localhost:3001`, Flask + Celery + Redis all running.
+- Labs 9 through 12 complete: Tempo on `localhost:4318`, Grafana on `localhost:3001`, Flask + Celery + Redis all running, **and** Tempo + Grafana exposed through the lab load balancer.
 - The `trace-lab/` project from Lab 12 with the virtual environment active.
 
 ## Step 1 — Restart the stack
@@ -78,10 +76,26 @@ EOF
 
 `format(..., "032x")` produces a 32-character lowercase hex string. Setting it as a header makes the value reachable by any HTTP client.
 
-## Step 3 — Trigger the request and capture the header
+## Step 3 — Expose the Flask port through the load balancer
+
+Open the **Load Balancer** modal in the lab UI. Run this once to find the IP to enter:
 
 ```bash
-curl -i -X POST http://localhost:8000/process \
+hostname -I
+```
+
+Use the **first** IP printed as `LB_IP`. Expose:
+
+| Enter IP | Enter Port |
+|---|---|
+| `LB_IP` | `8000` (Flask API) |
+
+Lab 9 must already have exposed `4318`, `3200`, and `3001` for the rest of this lab to work.
+
+## Step 4 — Trigger the request and capture the header
+
+```bash
+curl -i -X POST http://<LB_IP>:8000/process \
   -H "Content-Type: application/json" \
   -d '{"item_id": 7}'
 ```
@@ -89,26 +103,26 @@ curl -i -X POST http://localhost:8000/process \
 
 Save the `X-Trace-ID` value from the response headers.
 
-## Step 4 — Open the trace in Grafana
+## Step 5 — Open the trace in Grafana
 
-Open `http://localhost:3001/explore`, pick the Tempo datasource, switch to **Search**, paste the trace ID, and click **Run query**.
+Open `http://<LB_IP>:3001/explore`, pick the Tempo datasource, switch to **Search**, paste the trace ID, and click **Run query**.
 ![](./images/output-4.png)
 
 The waterfall opens with two rows: `POST /process` as the root and `celery-process` as the child.
 
-## Step 5 — Read the waterfall
+## Step 6 — Read the waterfall
 
 The bar width is the span duration. The widest bar in the trace is the slowest operation. Click any bar to expand its attributes.
 ![](./images/output-5.png)
 
 The `celery-process` bar is wider than the Flask bar. The worker is the slow part, not the API.
 
-## Step 6 — Inject latency and confirm attribution
+## Step 7 — Inject latency and confirm attribution
 
 Add `time.sleep(2)` inside `do_work` in `tasks.py`, restart the worker, and trigger another request.
 
 ```bash
-curl -i -X POST http://localhost:8000/process \
+curl -i -X POST http://<LB_IP>:8000/process \
   -H "Content-Type: application/json" \
   -d '{"item_id": 99}'
 ```
@@ -116,13 +130,6 @@ curl -i -X POST http://localhost:8000/process \
 
 Paste the new `X-Trace-ID` into Tempo. The `celery-process` bar is now the widest by far. The latency is attributed to the worker, where it happened. Remove the `sleep` after observing.
 
-## Checkpoint
-
-- [ ] The Flask response carries an `X-Trace-ID` header with a 32-character hex value.
-- [ ] Tempo search by trace ID returns a single trace with two spans.
-- [ ] The widest bar in the baseline trace is `celery-process`.
-- [ ] After injecting `time.sleep(2)`, the worker span dominates the waterfall.
-
 ## Next Steps
 
-Stop the worker and API with `Ctrl+C`. The Labs 9–13 series now answers "why is this request slow?" from a single trace ID. The next module covers metrics and logs with Prometheus and Loki.
+Stop the worker and API with `Ctrl+C`. Remove the `8000` port from the Load Balancer modal. The Labs 9–13 series now answers "why is this request slow?" from a single trace ID. The next module covers metrics and logs with Prometheus and Loki.
