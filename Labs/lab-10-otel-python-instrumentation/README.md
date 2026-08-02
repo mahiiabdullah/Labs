@@ -125,14 +125,12 @@ You should see `Running on http://0.0.0.0:5000`. The wrapper injects bytecode at
 ```bash
 curl http://<LB_IP>:5000/hello
 ```
-![](./images/output-4.png)
 
 The JSON payload from the Flask handler should return. The wrapper has already exported the matching span to Tempo.
 
 ## Step 7 — View the trace in Grafana
 
 Open `http://<LB_IP>:3001` in your browser, choose Explore, select the `Tempo` datasource, switch to **Search**, enter `my-api`, and click **Run query**.
-![](./images/output-5.png)
 
 The trace for `/hello` should appear with attributes such as `http.method=GET` and `http.route=/hello`.
 
