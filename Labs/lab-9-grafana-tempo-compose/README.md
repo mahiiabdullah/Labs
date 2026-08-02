@@ -55,7 +55,6 @@ volumes:
   tempo-data:
 EOF
 ```
-![](./images/output-1.png)
 
 `tempo` exposes its HTTP query API on 3200 and its OTLP receiver on 4318. `grafana` mounts the provisioning directory so datasources register at startup.
 
@@ -108,11 +107,11 @@ EOF
 ```bash
 docker compose up -d
 ```
-![](./images/output-2.png)
+![](./images/output-1.png)
 ```bash
 docker compose ps
 ```
-![](./images/output-3.png)
+![](./images/output-2.png)
 
 Both services should report `running`. If Grafana is missing, check the provisioning YAML for syntax errors.
 
@@ -152,7 +151,7 @@ curl -X POST http://localhost:4318/v1/traces \
   -H "Content-Type: application/json" \
   --data-binary @span.json
 ```
-![](./images/output-4.png)
+![](./images/output-3.png)
 
 The response should be HTTP 200 with `{"partialSuccess":{}}`.
 
@@ -163,8 +162,13 @@ Open the **Load Balancer** modal in the lab UI (top-right). Run this once to fin
 ```bash
 hostname -I
 ```
+![](./images/output-4.png)
 
-Use the **first** IP printed as `LB_IP`. Expose three ports, one at a time:
+Use the **first** IP printed as `LB_IP`. Open the Load Balancer modal:
+
+![](./images/output-5.png)
+
+Expose three ports, one at a time:
 
 | Enter IP | Enter Port |
 |---|---|
@@ -172,19 +176,23 @@ Use the **first** IP printed as `LB_IP`. Expose three ports, one at a time:
 | `LB_IP`  | `3200` (Tempo query)  |
 | `LB_IP`  | `3001` (Grafana UI)   |
 
+The modal lists each route after you click **Expose**:
+
+![](./images/output-6.png)
+
 After exposing, hit Tempo's query API through the load balancer:
 
 ```bash
 curl http://<LB_IP>:3200/api/traces/4bf92f3577b34da6a3ce929d0e0e4736
 ```
-![](./images/output-5.png)
+![](./images/output-7.png)
 
 The JSON body includes `traceID=4bf92f3577b34da6a3ce929d0e0e4736` and the `hello-trace` span.
 
 ## Step 8 — Find the trace in Grafana
 
 Open `http://<LB_IP>:3001` in your browser, log in as `admin` / `admin`, click the compass icon for Explore, pick the `Tempo` datasource, switch to **Search**, and paste the trace ID.
-![](./images/output-6.png)
+![](./images/output-8.png)
 
 The `hello-trace` row appears with its timing bar.
 
