@@ -27,7 +27,20 @@ The bundled script `setup-lab9-stack.sh` writes the same files Lab 9 produces an
 mkdir -p lab-10-otel-python-instrumentation
 cd lab-10-otel-python-instrumentation
 
-# download or copy setup-lab9-stack.sh into this folder, then:
+# Pull the bundled setup script straight from the repo so the rest of
+# this lab works without copying files by hand.
+curl -fsSL -o setup-lab9-stack.sh \
+  https://raw.githubusercontent.com/mahiiabdullah/Labs/main/Labs/lab-10-otel-python-instrumentation/setup-lab9-stack.sh
+
+chmod +x setup-lab9-stack.sh
+./setup-lab9-stack.sh
+```
+
+If `curl` is missing, use `wget`:
+
+```bash
+wget -O setup-lab9-stack.sh \
+  https://raw.githubusercontent.com/mahiiabdullah/Labs/main/Labs/lab-10-otel-python-instrumentation/setup-lab9-stack.sh
 chmod +x setup-lab9-stack.sh
 ./setup-lab9-stack.sh
 ```
