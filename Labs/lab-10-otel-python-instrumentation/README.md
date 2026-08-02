@@ -6,7 +6,7 @@ Start the Grafana + Tempo stack on this container, install the OpenTelemetry dis
 
 ## What You Will Build
 
-- A `docker-compose.yml` running Grafana on host port 3001 and Tempo on 3200 and 4318, started fresh on this container.
+- A `docker-compose.yml` running Grafana and Tempo, started fresh on this container.
 - A Tempo config that opens an OTLP HTTP receiver.
 - A provisioned Grafana datasource pointing at Tempo.
 - A Python virtual environment with `opentelemetry-distro`, the OTLP HTTP exporter, and Flask instrumentation.
@@ -17,7 +17,7 @@ Start the Grafana + Tempo stack on this container, install the OpenTelemetry dis
 
 - Docker Engine with the Compose plugin.
 - Python 3.10 or newer with `pip`. On Debian/Ubuntu lab images, install `sudo apt install -y python3-venv python3-pip` first.
-- Ports 3001, 3200, 4318, and 5000 free on the host.
+- Host ports `4318`, `3200`, `3000`, and `5000` free. The setup script picks the next free port if any of the first three are already in use.
 
 ## Step 1 — Start the Grafana + Tempo stack
 
@@ -46,7 +46,23 @@ chmod +x setup-lab9-stack.sh
 ```
 ![](./images/output-1.png)
 
-The script prints the container status and the HTTP codes for `localhost:3200/ready` and `localhost:3001/api/health`. Both should be `200`. If either is `000`, the container is still booting — wait a few seconds and re-run `curl http://localhost:3200/ready`.
+The script picks free host ports for Tempo's OTLP receiver (default 4318), Tempo's query API (default 3200), and Grafana (default 3000), writes `docker-compose.yml`, and brings the stack up. If any of those defaults is already in use on the container, the script picks the next free port automatically and prints the chosen values.
+
+Load the chosen ports into your shell so every later step can reference them:
+
+```bash
+# Fall back to the defaults if the file is missing for any reason.
+set -a
+[ -f .stack-ports ] && . ./.stack-ports || {
+  TEMPO_OTLP_PORT=4318
+  TEMPO_QUERY_PORT=3200
+  GRAFANA_PORT=3000
+}
+set +a
+echo "TEMPO_OTLP_PORT=$TEMPO_OTLP_PORT  TEMPO_QUERY_PORT=$TEMPO_QUERY_PORT  GRAFANA_PORT=$GRAFANA_PORT"
+```
+
+The health-check lines at the end of the script (`Tempo ready?` and `Grafana ready?`) should both report `200`. A `000` means the container is still booting — wait a few seconds and re-run `curl http://localhost:$TEMPO_QUERY_PORT/ready`.
 
 ## Step 2 — Expose the stack through the load balancer
 
@@ -56,21 +72,23 @@ Open the **Load Balancer** modal in the lab UI. Find the IP to enter:
 hostname -I
 ```
 
-Use the **first** IP printed as `LB_IP`. Expose three ports, one at a time:
+Use the **first** IP printed as `LB_IP`. Expose three ports, one at a time — substitute the port numbers your script actually printed:
 
 | Enter IP | Enter Port |
 |---|---|
-| `LB_IP` | `4318` (Tempo OTLP) |
-| `LB_IP` | `3200` (Tempo query)  |
-| `LB_IP` | `3001` (Grafana UI)   |
+| `LB_IP` | `$TEMPO_OTLP_PORT` (Tempo OTLP) |
+| `LB_IP` | `$TEMPO_QUERY_PORT` (Tempo query) |
+| `LB_IP` | `$GRAFANA_PORT` (Grafana UI) |
+
+Default values are `4318`, `3200`, and `3000`. If your script had to fall back to other ports because the defaults were already in use, use those instead.
 
 You should see three entries in the modal's "Currently exposed" panel.
 
 Verify the load balancer routes work:
 
 ```bash
-curl http://<LB_IP>:3200/ready
-curl http://<LB_IP>:3001/api/health
+curl http://<LB_IP>:${TEMPO_QUERY_PORT}/ready
+curl http://<LB_IP>:${GRAFANA_PORT}/api/health
 ```
 
 Both should return `200 OK` through the load balancer.
@@ -126,11 +144,11 @@ The list should include `-distro`, `-exporter-otlp-proto-http`, `-instrumentatio
 
 ## Step 5 — Configure the OTLP exporter
 
-The wrapper sends spans to Tempo on the same container, so the endpoint is `http://localhost:4318`.
+The wrapper sends spans to Tempo on the same container. The endpoint must match the host port the script actually bound to `$TEMPO_OTLP_PORT`:
 
 ```bash
 export OTEL_SERVICE_NAME=my-api
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:${TEMPO_OTLP_PORT}
 export OTEL_TRACES_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 ```
@@ -144,7 +162,7 @@ Run the wrapped Flask in the background so it survives the next `curl` command. 
 ```bash
 nohup opentelemetry-instrument \
     --service_name my-api \
-    --exporter_otlp_endpoint http://localhost:4318 \
+    --exporter_otlp_endpoint "http://localhost:${TEMPO_OTLP_PORT}" \
     --exporter_otlp_protocol http/protobuf \
     -- python -m flask run --host=0.0.0.0 --port=5000 \
     > /tmp/flask.log 2>&1 &
@@ -153,7 +171,7 @@ sleep 3
 tail -n 5 /tmp/flask.log
 ```
 
-You should see `Running on http://0.0.0.0:5000`. The wrapper injects bytecode at import time so every Flask request becomes a span, and sends them to `localhost:4318` (the local Tempo).
+You should see `Running on http://0.0.0.0:5000`. The wrapper injects bytecode at import time so every Flask request becomes a span, and sends them to `localhost:${TEMPO_OTLP_PORT}` (the local Tempo).
 
 ## Step 7 — Expose the Flask port through the load balancer
 
@@ -173,7 +191,7 @@ The JSON payload from the Flask handler should return. The wrapper has already e
 
 ## Step 9 — View the trace in Grafana
 
-Open `http://<LB_IP>:3001` in your browser, choose Explore, select the `Tempo` datasource, switch to **Search**, enter `my-api`, and click **Run query**.
+Open `http://<LB_IP>:${GRAFANA_PORT}` in your browser, choose Explore, select the `Tempo` datasource, switch to **Search**, enter `my-api`, and click **Run query**.
 
 The trace for `/hello` should appear with attributes such as `http.method=GET` and `http.route=/hello`.
 
