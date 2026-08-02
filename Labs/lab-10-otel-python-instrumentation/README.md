@@ -16,12 +16,12 @@ Start the Grafana + Tempo stack on this container, install the OpenTelemetry dis
 ## Prerequisites
 
 - Docker Engine with the Compose plugin.
-- Python 3.10 or newer with `pip`. On Debian/Ubuntu lab images, install `sudo apt install -y python3-venv python3-pip` first.
+- Python 3.10 or newer. The setup script installs `python3-venv` and `python3-pip` if missing.
 - Host ports `4318`, `3200`, `3000`, and `5000` free. The setup script picks the next free port if any of the first three are already in use.
 
 ## Step 1 — Start the Grafana + Tempo stack
 
-The bundled script `setup-lab9-stack.sh` writes the same files Lab 9 produces and brings the stack up. It is idempotent — running it twice is safe.
+The bundled script `setup-lab9-stack.sh` writes the same files Lab 9 produces, brings the stack up, **and** bootstraps the Python venv + Flask app. It is idempotent — running it twice is safe.
 
 ```bash
 mkdir -p lab-10-otel-python-instrumentation
@@ -46,7 +46,12 @@ chmod +x setup-lab9-stack.sh
 ```
 ![](./images/output-1.png)
 
-The script picks free host ports for Tempo's OTLP receiver (default 4318), Tempo's query API (default 3200), and Grafana (default 3000), writes `docker-compose.yml`, and brings the stack up. If any of those defaults is already in use on the container, the script picks the next free port automatically and prints the chosen values.
+The script:
+
+1. Installs `python3-venv` and `python3-pip` if they are missing (fresh Debian/Ubuntu container — the venv module is not preinstalled).
+2. Probes ports `4318`, `3200`, `3000` and picks the next free one for Tempo's OTLP receiver, Tempo's query API, and Grafana if any default is already in use.
+3. Writes `docker-compose.yml`, `tempo.yml`, and the Grafana datasource provisioning file, then runs `docker compose up -d`.
+4. Creates `.venv`, installs Flask + the OpenTelemetry packages into it, and drops `app.py` next to it.
 
 Load the chosen ports into your shell so every later step can reference them:
 
@@ -93,73 +98,18 @@ curl http://<LB_IP>:${GRAFANA_PORT}/api/health
 
 Both should return `200 OK` through the load balancer.
 
-## Step 3 — Create the Python project and a Flask app
+## Step 3 — Configure the OTLP exporter and start the wrapper
+
+The setup script already created `.venv` and `app.py`. Activate the venv, point the OTLP exporter at the Tempo OTLP port the script actually bound, and run Flask under the wrapper in the background so it survives the next `curl` command. Stop it with `kill %1` (or `pkill -f 'flask run'`) when you finish.
 
 ```bash
-cd ~/lab-10-otel-python-instrumentation
-python3 -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip
-```
 
-> If a previous attempt left an empty `lab-10-otel-python-instrumentation/` folder, run `cd ~` first and `rm -rf lab-10-otel-python-instrumentation` before these commands. The four lines must run from your home directory, not from inside another copy of the same folder.
-
-```bash
-cat > app.py <<'EOF'
-from flask import Flask
-
-app = Flask(__name__)
-
-@app.get("/hello")
-def hello():
-    return {"message": "hello from instrumented api"}, 200
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-EOF
-```
-
-On Windows activate with `.venv\Scripts\activate` instead.
-
-## Step 4 — Install Flask and the OpenTelemetry packages
-
-```bash
-pip install flask
-pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http opentelemetry-instrumentation-flask
-```
-![](./images/output-2.png)
-
-Recent versions of `opentelemetry-distro` no longer ship the `opentelemetry-distro` console script. Install the auto-instrumentations explicitly:
-
-```bash
-pip install opentelemetry-instrumentation-requests \
-            opentelemetry-instrumentation-urllib3
-```
-```bash
-pip list | grep opentelemetry
-```
-![](./images/output-3.png)
-
-The list should include `-distro`, `-exporter-otlp-proto-http`, `-instrumentation-flask`, `-instrumentation-wsgi` (pulled in by `-flask`), plus `-requests` and `-urllib3`.
-
-## Step 5 — Configure the OTLP exporter
-
-The wrapper sends spans to Tempo on the same container. The endpoint must match the host port the script actually bound to `$TEMPO_OTLP_PORT`:
-
-```bash
 export OTEL_SERVICE_NAME=my-api
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:${TEMPO_OTLP_PORT}
 export OTEL_TRACES_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-```
 
-`OTEL_SERVICE_NAME` sets the `service.name` resource attribute that Tempo will display. The wrapper picks up these variables automatically — no need to pass them on the command line.
-
-## Step 6 — Run the app under the wrapper
-
-Run the wrapped Flask in the background so it survives the next `curl` command. Stop it with `kill %1` (or `pkill -f 'flask run'`) when you finish.
-
-```bash
 nohup opentelemetry-instrument \
     --service_name my-api \
     --exporter_otlp_endpoint "http://localhost:${TEMPO_OTLP_PORT}" \
@@ -173,7 +123,7 @@ tail -n 5 /tmp/flask.log
 
 You should see `Running on http://0.0.0.0:5000`. The wrapper injects bytecode at import time so every Flask request becomes a span, and sends them to `localhost:${TEMPO_OTLP_PORT}` (the local Tempo).
 
-## Step 7 — Expose the Flask port through the load balancer
+## Step 4 — Expose the Flask port through the load balancer
 
 Open the **Load Balancer** modal. Expose one more port:
 
@@ -181,7 +131,7 @@ Open the **Load Balancer** modal. Expose one more port:
 |---|---|
 | `LB_IP` | `5000` (Flask API) |
 
-## Step 8 — Send one request through the load balancer
+## Step 5 — Send one request through the load balancer
 
 ```bash
 curl http://<LB_IP>:5000/hello
@@ -189,7 +139,7 @@ curl http://<LB_IP>:5000/hello
 
 The JSON payload from the Flask handler should return. The wrapper has already exported the matching span to Tempo.
 
-## Step 9 — View the trace in Grafana
+## Step 6 — View the trace in Grafana
 
 Open `http://<LB_IP>:${GRAFANA_PORT}` in your browser, choose Explore, select the `Tempo` datasource, switch to **Search**, enter `my-api`, and click **Run query**.
 

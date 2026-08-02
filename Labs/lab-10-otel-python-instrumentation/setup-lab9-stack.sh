@@ -130,11 +130,52 @@ TEMPO_QUERY_PORT=${TEMPO_QUERY_PORT}
 GRAFANA_PORT=${GRAFANA_PORT}
 EOF
 
+# 8. Also create the Python virtual environment and install Flask + the
+#    OpenTelemetry packages now. Doing this here means the rest of the
+#    lab is just "source the venv and run the wrapper", and the user's
+#    fresh container is bootstrapped by a single command.
+if [ ! -d .venv ]; then
+  echo "Creating Python virtual environment..."
+  python3 -m venv .venv
+fi
+
+# shellcheck disable=SC1091
+source .venv/bin/activate
+python -m pip install --upgrade pip >/dev/null
+python -m pip install --quiet \
+  flask \
+  opentelemetry-distro \
+  opentelemetry-exporter-otlp-proto-http \
+  opentelemetry-instrumentation-flask \
+  opentelemetry-instrumentation-requests \
+  opentelemetry-instrumentation-urllib3
+
+# 9. Drop a tiny Flask app too, so the user can skip Step 3's "cat > app.py".
+if [ ! -f app.py ]; then
+  cat > app.py <<'PYEOF'
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.get("/hello")
+def hello():
+    return {"message": "hello from instrumented api"}, 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+PYEOF
+fi
+
+deactivate 2>/dev/null || true
+
 echo
 echo "Stack is up. Container ports bound (host -> container):"
 echo "  ${GRAFANA_PORT} -> Grafana UI (admin / admin)"
 echo "  ${TEMPO_QUERY_PORT} -> Tempo query API"
 echo "  ${TEMPO_OTLP_PORT} -> Tempo OTLP HTTP receiver"
+echo
+echo "Python virtual environment: .venv  (activate with 'source .venv/bin/activate')"
+echo "Flask app: app.py  (serves GET /hello on port 5000)"
 echo
 echo "The chosen ports are saved in .stack-ports for later steps."
 echo "Next: open the Load Balancer modal and expose ${TEMPO_OTLP_PORT}, ${TEMPO_QUERY_PORT}, and ${GRAFANA_PORT} on LB_IP"
