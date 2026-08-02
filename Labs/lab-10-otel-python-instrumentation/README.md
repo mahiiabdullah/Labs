@@ -13,7 +13,7 @@ Install the OpenTelemetry distro and HTTP exporter, run a Flask API under the au
 ## Prerequisites
 
 - Lab 9 stack running locally (Tempo on 4318, Grafana on 3001) **and** exposed through the lab load balancer.
-- Python 3.10 or newer with pip.
+- Python 3.10 or newer with pip. On Debian/Ubuntu lab images, install `sudo apt install -y python3.12-venv python3-pip` first.
 
 ## Step 1 — Create the project and a Flask app
 
@@ -22,7 +22,10 @@ mkdir -p lab-10-otel-python-instrumentation
 cd lab-10-otel-python-instrumentation
 python3 -m venv .venv
 source .venv/bin/activate
+pip install --upgrade pip
 ```
+
+> If a previous attempt left an empty `lab-10-otel-python-instrumentation/` folder, run `cd ~` first and `rm -rf lab-10-otel-python-instrumentation` before these commands. The four lines must run from your home directory, not from inside another copy of the same folder.
 
 ```bash
 cat > app.py <<'EOF'
