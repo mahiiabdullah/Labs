@@ -5,6 +5,21 @@
 
 set -euo pipefail
 
+# 0. Make sure python3-venv is available. On a fresh Debian/Ubuntu
+#    container, ensurepip is missing and `python3 -m venv` errors out
+#    with "externally-managed-environment". Install the metapackage,
+#    falling back to the versioned variant if the metapackage is
+#    unavailable.
+if ! python3 -m venv --help >/dev/null 2>&1; then
+  echo "Installing python3-venv..."
+  sudo apt-get update
+  if ! sudo apt-get install -y python3-venv python3-pip; then
+    PYV=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+    echo "Trying python${PYV}-venv instead..."
+    sudo apt-get install -y "python${PYV}-venv" python3-pip
+  fi
+fi
+
 # 1. Pick the project directory (defaults to the script's own folder).
 PROJECT_DIR="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 cd "$PROJECT_DIR"
