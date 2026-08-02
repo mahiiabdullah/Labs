@@ -51,15 +51,20 @@ pip install flask
 pip install opentelemetry-distro opentelemetry-exporter-otlp-proto-http opentelemetry-instrumentation-flask
 ```
 ![](./images/output-1.png)
+
+In recent versions of `opentelemetry-distro` the `opentelemetry-distro` console script is no longer installed. Install the auto-instrumentations explicitly:
+
 ```bash
-opentelemetry-distro opentelemetry-bootstrap -a install
+pip install opentelemetry-instrumentation-requests \
+            opentelemetry-instrumentation-urllib3 \
+            opentelemetry-instrumentation-werkzeug
 ```
 ```bash
 pip list | grep opentelemetry
 ```
 ![](./images/output-2.png)
 
-The list should include `-distro`, `-exporter-otlp-proto-http`, `-instrumentation-flask`, plus `-requests`, `-urllib3`, and `-werkzeug` from the bootstrap step.
+The list should include `-distro`, `-exporter-otlp-proto-http`, `-instrumentation-flask`, plus `-requests`, `-urllib3`, and `-werkzeug`.
 
 ## Step 3 — Configure the OTLP exporter
 
