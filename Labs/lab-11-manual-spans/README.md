@@ -6,154 +6,129 @@ Wrap a Flask route in `tracer.start_as_current_span`, attach domain attributes, 
 
 ## What You Will Build
 
-- A Flask route with a root `handle_request` span.
-- Custom attributes such as `user.id`, `request.id`, and `db.query_time_ms`.
-- Two nested child spans: `db_lookup` and `cache_check`.
+- A Flask route with a root `handle_request` span carrying custom attributes (`user.id`, `request.id`).
+- Two nested child spans: `db_lookup` and `cache_check`, each with its own attributes.
 
 ## Prerequisites
 
-- Lab 9 stack running locally (Tempo on 4318, Grafana on 3001) **and** exposed through the lab load balancer.
-- Lab 10 project (`lab-10-otel-python-instrumentation`) with its virtual environment active.
-- Python 3.10 or newer.
+- Docker Engine with the Compose plugin.
+- Python 3.10 or newer. The setup script installs `python3-venv` and `python3-pip` if missing.
+- Host ports `4318`, `3200`, `3000`, and `5000` free. The setup script picks the next free port if any of the first three are already in use.
 
-## Step 1 — Copy the Lab 10 project forward
+## Step 1 — Start the Grafana + Tempo stack and write the manual-spans app
+
+The bundled script `setup-lab11-stack.sh` brings up the Tempo + Grafana stack (auto-picking free host ports), bootstraps the Python venv, installs Flask + the OpenTelemetry packages, and writes the **final** `app.py` — the version with the root span plus two nested children. It is idempotent.
 
 ```bash
-cp -r lab-10-otel-python-instrumentation lab-11-manual-spans
+mkdir -p lab-11-manual-spans
 cd lab-11-manual-spans
-source .venv/bin/activate
+
+# Pull the bundled setup script straight from the repo.
+curl -fsSL -o setup-lab11-stack.sh \
+  https://raw.githubusercontent.com/mahiiabdullah/Labs/main/Labs/lab-11-manual-spans/setup-lab11-stack.sh
+
+chmod +x setup-lab11-stack.sh
+./setup-lab11-stack.sh
 ```
 
-On Windows, use `.venv\Scripts\activate`. Tempo and Grafana should still be reachable from Lab 9.
-
-## Step 2 — Add a root span with custom attributes
+If `curl` is missing, use `wget`:
 
 ```bash
-cat > app.py <<'EOF'
-import time
-from flask import Flask
-from opentelemetry import trace
-
-app = Flask(__name__)
-tracer = trace.get_tracer(__name__)
-
-@app.get("/hello")
-def hello():
-    user_id = "u-42"
-    request_id = "r-1001"
-    with tracer.start_as_current_span("handle_request") as span:
-        span.set_attribute("user.id", user_id)
-        span.set_attribute("request.id", request_id)
-        start = time.perf_counter()
-        time.sleep(0.05)
-        elapsed_ms = (time.perf_counter() - start) * 1000
-        span.set_attribute("db.query_time_ms", round(elapsed_ms, 2))
-        return {"message": "hello from instrumented api"}, 200
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-EOF
+wget -O setup-lab11-stack.sh \
+  https://raw.githubusercontent.com/mahiiabdullah/Labs/main/Labs/lab-11-manual-spans/setup-lab11-stack.sh
+chmod +x setup-lab11-stack.sh
+./setup-lab11-stack.sh
 ```
 
-`start_as_current_span` activates the span for the duration of the `with` block. Any nested spans created inside automatically attach as children. `set_attribute` accepts strings, numbers, and booleans.
+Load the chosen ports into your shell so every later step can reference them:
 
-## Step 3 — Expose the Flask port through the load balancer
+```bash
+# Fall back to the defaults if the file is missing for any reason.
+set -a
+[ -f .stack-ports ] && . ./.stack-ports || {
+  TEMPO_OTLP_PORT=4318
+  TEMPO_QUERY_PORT=3200
+  GRAFANA_PORT=3000
+}
+set +a
+echo "TEMPO_OTLP_PORT=$TEMPO_OTLP_PORT  TEMPO_QUERY_PORT=$TEMPO_QUERY_PORT  GRAFANA_PORT=$GRAFANA_PORT"
+```
 
-Open the **Load Balancer** modal in the lab UI. Run this once to find the IP to enter:
+The health-check lines at the end of the script (`Tempo ready?` and `Grafana ready?`) should both report `200`. A `000` means the container is still booting — wait a few seconds and re-run `curl http://localhost:$TEMPO_QUERY_PORT/ready`.
+
+## Step 2 — Expose the stack + Flask through the load balancer
+
+Open the **Load Balancer** modal in the lab UI. Find the IP to enter:
 
 ```bash
 hostname -I
 ```
 
-Use the **first** IP printed as `LB_IP`. Expose:
+Use the **first** IP printed as `LB_IP`. Expose four ports, one at a time — substitute the port numbers your script actually printed:
 
 | Enter IP | Enter Port |
 |---|---|
+| `LB_IP` | `$TEMPO_OTLP_PORT` (Tempo OTLP) |
+| `LB_IP` | `$TEMPO_QUERY_PORT` (Tempo query) |
+| `LB_IP` | `$GRAFANA_PORT` (Grafana UI) |
 | `LB_IP` | `5000` (Flask API) |
 
-Lab 9 must already have exposed `4318`, `3200`, and `3001` for the rest of this lab to work.
+Default values are `4318`, `3200`, `3000`, and `5000`. Use whatever the script printed if it had to fall back.
 
-## Step 4 — Run the app and trigger a request
+Verify the load balancer routes work:
 
 ```bash
+curl http://<LB_IP>:${TEMPO_QUERY_PORT}/ready
+curl http://<LB_IP>:${GRAFANA_PORT}/api/health
+```
+
+Both should return `200 OK` through the load balancer.
+
+## Step 3 — Run the wrapped Flask app
+
+The setup script already created `.venv` and `app.py`. Activate the venv, point the OTLP exporter at the Tempo OTLP port the script actually bound, and run Flask under the wrapper in the background so it survives the next `curl` command. Stop it with `kill %1` (or `pkill -f 'flask run'`) when you finish.
+
+```bash
+source .venv/bin/activate
+
 export OTEL_SERVICE_NAME=my-api
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:${TEMPO_OTLP_PORT}
 export OTEL_TRACES_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 
-opentelemetry-instrument \
+nohup opentelemetry-instrument \
     --service_name my-api \
-    --exporter_otlp_endpoint http://localhost:4318 \
+    --exporter_otlp_endpoint "http://localhost:${TEMPO_OTLP_PORT}" \
     --exporter_otlp_protocol http/protobuf \
-    -- python -m flask run --host=0.0.0.0 --port=5000
+    -- python -m flask run --host=0.0.0.0 --port=5000 \
+    > /tmp/flask.log 2>&1 &
+
+sleep 3
+tail -n 5 /tmp/flask.log
 ```
+
+You should see `Running on http://0.0.0.0:5000`.
+
+## Step 4 — Trigger a request
+
 ```bash
 curl http://<LB_IP>:5000/hello
 ```
-![](./images/output-1.png)
 
 The Flask handler returns the JSON payload. The wrapper exports the trace to Tempo.
 
-## Step 5 — Verify the span in Grafana
+## Step 5 — Inspect the trace in Grafana
 
-Open `http://<LB_IP>:3001`, click Explore, pick the `Tempo` datasource, switch to **Search**, enter `my-api`, and click **Run query**.
-![](./images/output-2.png)
+Open `http://<LB_IP>:${GRAFANA_PORT}`, choose Explore, pick the `Tempo` datasource, switch to **Search**, enter `my-api`, and click **Run query**.
 
-The `handle_request` span should appear with `user.id`, `request.id`, and `db.query_time_ms` in its attribute panel.
+The waterfall should show three rows:
 
-## Step 6 — Add nested child spans
+- `handle_request` at the top, with attributes `user.id=u-42` and `request.id=r-1001`.
+- `db_lookup` indented underneath, with `db.query_time_ms` and `db.system=postgres`.
+- `cache_check` indented underneath, with `cache.lookup_time_ms` and `cache.hit=false`.
 
-```bash
-cat > app.py <<'EOF'
-import time
-from flask import Flask
-from opentelemetry import trace
-
-app = Flask(__name__)
-tracer = trace.get_tracer(__name__)
-
-@app.get("/hello")
-def hello():
-    user_id = "u-42"
-    request_id = "r-1001"
-    with tracer.start_as_current_span("handle_request") as root:
-        root.set_attribute("user.id", user_id)
-        root.set_attribute("request.id", request_id)
-
-        with tracer.start_as_current_span("db_lookup") as db:
-            start = time.perf_counter()
-            time.sleep(0.03)
-            elapsed_ms = (time.perf_counter() - start) * 1000
-            db.set_attribute("db.query_time_ms", round(elapsed_ms, 2))
-            db.set_attribute("db.system", "postgres")
-
-        with tracer.start_as_current_span("cache_check") as cache:
-            start = time.perf_counter()
-            time.sleep(0.01)
-            elapsed_ms = (time.perf_counter() - start) * 1000
-            cache.set_attribute("cache.lookup_time_ms", round(elapsed_ms, 2))
-            cache.set_attribute("cache.hit", False)
-
-        return {"message": "hello from instrumented api"}, 200
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-EOF
-```
-
-Inner `start_as_current_span` calls attach to the currently active span. The `db_lookup` and `cache_check` spans become siblings under `handle_request`.
-
-## Step 7 — Verify the waterfall
-
-Restart the wrapped Flask process, trigger one request through the load balancer, and reload the trace in Grafana.
-
-```bash
-curl http://<LB_IP>:5000/hello
-```
-![](./images/output-3.png)
-
-The waterfall should show three rows: `handle_request` at the top, then `db_lookup` and `cache_check` indented underneath.
+Inner `start_as_current_span` calls attach to the currently active span, which is why `db_lookup` and `cache_check` become siblings under `handle_request` rather than nested under each other.
 
 ## Next Steps
 
-Stop the wrapped process with `Ctrl+C`. Remove the `5000` port from the Load Balancer modal. Lab 12 propagates the trace context from a Flask request into a Celery worker over Redis.
+Stop the wrapped process with `kill %1`. Stop the stack with `docker compose down`. Remove the four ports from the Load Balancer modal. Lab 12 propagates the trace context from a Flask request into a Celery worker over Redis.

@@ -12,160 +12,130 @@ Inject the active trace context from a Flask endpoint into a Celery task and ext
 
 ## Prerequisites
 
-- Lab 9 stack running locally (Tempo on 4318, Grafana on 3001) **and** exposed through the lab load balancer.
-- Redis running on `localhost:6379`.
-- Python 3.10 or newer with pip.
+- Docker Engine with the Compose plugin.
+- Python 3.10 or newer. The setup script installs `python3-venv` and `python3-pip` if missing.
+- The setup script installs and starts `redis-server` if it is not already present.
+- Host ports `4318`, `3200`, `3000`, and `8000` free. The setup script picks the next free port if any of the first four are already in use.
 
-## Step 1 — Create the project
+## Step 1 — Start the Grafana + Tempo stack, Redis, and the Celery + Flask app
 
-```bash
-mkdir trace-lab && cd trace-lab
-python -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-```
+The bundled script `setup-lab12-stack.sh` brings up the Tempo + Grafana stack, installs and starts Redis, bootstraps the Python venv with Flask + Celery + Redis + the OTel SDK, and writes `tasks.py` (worker side, `extract(carrier)`) and `app.py` (Flask side, `inject(carrier)`). It is idempotent.
 
 ```bash
-cat > requirements.txt <<'EOF'
-flask==3.0.3
-celery==5.4.0
-redis==5.0.4
-opentelemetry-api==1.27.0
-opentelemetry-sdk==1.27.0
-opentelemetry-exporter-otlp-proto-http==1.27.0
-opentelemetry-instrumentation-flask==0.48b0
-opentelemetry-instrumentation-celery==0.48b0
-EOF
+mkdir -p lab-12-trace-context-propagation
+cd lab-12-trace-context-propagation
+
+# Pull the bundled setup script straight from the repo.
+curl -fsSL -o setup-lab12-stack.sh \
+  https://raw.githubusercontent.com/mahiiabdullah/Labs/main/Labs/lab-12-trace-context-propagation/setup-lab12-stack.sh
+
+chmod +x setup-lab12-stack.sh
+./setup-lab12-stack.sh
 ```
+
+If `curl` is missing, use `wget`:
 
 ```bash
-pip install -r requirements.txt
+wget -O setup-lab12-stack.sh \
+  https://raw.githubusercontent.com/mahiiabdullah/Labs/main/Labs/lab-12-trace-context-propagation/setup-lab12-stack.sh
+chmod +x setup-lab12-stack.sh
+./setup-lab12-stack.sh
 ```
 
-The packages give you the propagation API, both instrumentations, and the OTLP exporter.
-
-## Step 2 — Configure Celery with Redis
+Load the chosen ports into your shell so every later step can reference them:
 
 ```bash
-cat > tasks.py <<'EOF'
-import socket
-from celery import Celery
-from opentelemetry import trace
-from opentelemetry.propagate import extract
-
-celery_app = Celery("trace-lab", broker="redis://localhost:6379/0", backend="redis://localhost:6379/0")
-tracer = trace.get_tracer(__name__)
-
-@celery_app.task(name="trace-lab.process_item")
-def process_item(item_id, carrier=None):
-    ctx = extract(carrier)
-    with tracer.start_as_current_span("celery-process", context=ctx) as span:
-        span.set_attribute("item.id", item_id)
-        span.set_attribute("worker.hostname", socket.gethostname())
-        result = do_work(item_id)
-        span.set_attribute("result.size", len(result))
-        return result
-
-def do_work(item_id):
-    return f"processed {item_id}"
-EOF
+# Fall back to the defaults if the file is missing for any reason.
+set -a
+[ -f .stack-ports ] && . ./.stack-ports || {
+  TEMPO_OTLP_PORT=4318
+  TEMPO_QUERY_PORT=3200
+  GRAFANA_PORT=3000
+  FLASK_PORT=8000
+}
+set +a
+echo "TEMPO_OTLP_PORT=$TEMPO_OTLP_PORT  TEMPO_QUERY_PORT=$TEMPO_QUERY_PORT  GRAFANA_PORT=$GRAFANA_PORT  FLASK_PORT=$FLASK_PORT"
 ```
 
-`extract(carrier)` reads the W3C `traceparent` header from the carrier dict and rebuilds a `Context`. Passing `context=ctx` to `start_as_current_span` makes the new span a child of the original Flask span.
+The health-check lines at the end of the script (`Tempo ready?`, `Grafana ready?`, `Redis ready?`) should report `200`, `200`, and `PONG` respectively. A `000` or `no` means the container is still booting — wait a few seconds and re-run.
 
-## Step 3 — Build the Flask API with inject
+## Step 2 — Expose the stack + Flask through the load balancer
 
-```bash
-cat > app.py <<'EOF'
-from flask import Flask, jsonify, request
-from celery import Celery
-from tasks import celery_app, process_item
-from opentelemetry import trace
-from opentelemetry.propagate import inject
-
-flask_app = Flask(__name__)
-flask_app.config["CELERY_BROKER_URL"] = "redis://localhost:6379/0"
-flask_app.config["CELERY_RESULT_BACKEND"] = "redis://localhost:6379/0"
-celery_app.conf.update(broker_url=flask_app.config["CELERY_BROKER_URL"])
-tracer = trace.get_tracer(__name__)
-
-@flask_app.post("/process")
-def enqueue_process():
-    item_id = request.json.get("item_id")
-    carrier = {}
-    inject(carrier)
-    task_result = process_item.delay(item_id, carrier=carrier)
-    return jsonify({
-        "task_id": task_result.id,
-        "trace_id": format(trace.get_current_span().get_span_context().trace_id, "032x"),
-    })
-EOF
-```
-
-`inject(carrier)` writes a single `traceparent` entry into the carrier dict. The carrier travels through Redis as a task kwarg.
-
-## Step 4 — Start Redis, the worker, and the API
-
-Open three terminals in `trace-lab/` with the virtual environment active.
-
-```bash
-# terminal 1
-redis-server
-```
-
-```bash
-# terminal 2
-celery -A tasks worker --loglevel=info
-```
-![](./images/output-1.png)
-
-```bash
-# terminal 3
-export OTEL_SERVICE_NAME=flask-api
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-export OTEL_TRACES_EXPORTER=otlp
-export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-opentelemetry-instrument --service_name=flask-api \
-  flask --app app run --port 8000
-```
-![](./images/output-2.png)
-
-The worker should print `ready`. The Flask API should answer on `http://localhost:8000`.
-
-## Step 5 — Expose the Flask port through the load balancer
-
-Open the **Load Balancer** modal in the lab UI. Run this once to find the IP to enter:
+Open the **Load Balancer** modal in the lab UI. Find the IP to enter:
 
 ```bash
 hostname -I
 ```
 
-Use the **first** IP printed as `LB_IP`. Expose:
+Use the **first** IP printed as `LB_IP`. Expose four ports, one at a time — substitute the port numbers your script actually printed:
 
 | Enter IP | Enter Port |
 |---|---|
-| `LB_IP` | `8000` (Flask API) |
+| `LB_IP` | `$TEMPO_OTLP_PORT` (Tempo OTLP) |
+| `LB_IP` | `$TEMPO_QUERY_PORT` (Tempo query) |
+| `LB_IP` | `$GRAFANA_PORT` (Grafana UI) |
+| `LB_IP` | `$FLASK_PORT` (Flask API) |
 
-Lab 9 must already have exposed `4318`, `3200`, and `3001` for the rest of this lab to work.
+Default values are `4318`, `3200`, `3000`, and `8000`. Use whatever the script printed if it had to fall back.
 
-## Step 6 — Trigger a request
+Verify the load balancer routes work:
 
 ```bash
-curl -i -X POST http://<LB_IP>:8000/process \
+curl http://<LB_IP>:${TEMPO_QUERY_PORT}/ready
+curl http://<LB_IP>:${GRAFANA_PORT}/api/health
+```
+
+Both should return `200 OK` through the load balancer.
+
+## Step 3 — Start the Celery worker and Flask app
+
+The setup script already created `.venv`, started Redis, and wrote `tasks.py` + `app.py`. Now run the worker and the wrapped Flask app in the background so they survive the next `curl` command. Stop them with `kill %1 %2` when you finish.
+
+```bash
+source .venv/bin/activate
+
+export OTEL_SERVICE_NAME=flask-api
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:${TEMPO_OTLP_PORT}
+export OTEL_TRACES_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+
+# Celery worker (does NOT need opentelemetry-instrument — the worker
+# code creates its spans directly via tracer.start_as_current_span).
+nohup celery -A tasks worker --loglevel=info \
+    > /tmp/celery.log 2>&1 &
+
+# Wrapped Flask
+nohup opentelemetry-instrument \
+    --service_name flask-api \
+    --exporter_otlp_endpoint "http://localhost:${TEMPO_OTLP_PORT}" \
+    --exporter_otlp_protocol http/protobuf \
+    -- flask --app app run --host=0.0.0.0 --port=${FLASK_PORT} \
+    > /tmp/flask.log 2>&1 &
+
+sleep 3
+tail -n 5 /tmp/celery.log
+echo '---'
+tail -n 5 /tmp/flask.log
+```
+
+The worker log should show `ready`. The Flask log should show `Running on http://0.0.0.0:${FLASK_PORT}`.
+
+## Step 4 — Trigger a request
+
+```bash
+curl -i -X POST http://<LB_IP>:${FLASK_PORT}/process \
   -H "Content-Type: application/json" \
   -d '{"item_id": 42}'
 ```
-![](./images/output-3.png)
 
-Save the `trace_id` from the JSON body. Both spans will share this ID.
+Save the `trace_id` from the JSON body. Both spans — the Flask `POST /process` and the worker's `celery-process` — share this trace ID because `inject(carrier)` wrote the W3C `traceparent` header into the task kwarg, and `extract(carrier)` rebuilt the same `Context` in the worker.
 
-## Step 7 — Verify a single trace in Tempo
+## Step 5 — Verify a single trace in Grafana
 
-Open `http://<LB_IP>:3001`, choose the Tempo datasource, switch to **Search**, paste the `trace_id`, and click **Run query**.
-![](./images/output-4.png)
+Open `http://<LB_IP>:${GRAFANA_PORT}`, choose Explore, pick the `Tempo` datasource, switch to **Search**, paste the `trace_id` from the previous step, and click **Run query**.
 
 Exactly two spans appear: `POST /process` as the root and `celery-process` as a child with `item.id` and `worker.hostname` attributes.
 
 ## Next Steps
 
-Stop the worker and API with `Ctrl+C`. Remove the `8000` port from the Load Balancer modal. Lab 13 exposes the trace ID on the response header and uses the service graph to read aggregate latency.
+Stop the worker and the wrapped Flask app with `kill %1 %2`. Stop the stack with `docker compose down`. Remove the four ports from the Load Balancer modal. Lab 13 exposes the trace ID on the response header and uses the service graph to read aggregate latency.

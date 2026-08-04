@@ -12,124 +12,155 @@ Expose the trace ID on the Flask response, open the trace in Grafana, and read t
 
 ## Prerequisites
 
-- Labs 9 through 12 complete: Tempo on `localhost:4318`, Grafana on `localhost:3001`, Flask + Celery + Redis all running, **and** Tempo + Grafana exposed through the lab load balancer.
-- The `trace-lab/` project from Lab 12 with the virtual environment active.
+- Docker Engine with the Compose plugin.
+- Python 3.10 or newer. The setup script installs `python3-venv` and `python3-pip` if missing.
+- The setup script installs and starts `redis-server` if it is not already present.
+- Host ports `4318`, `3200`, `3000`, and `8000` free. The setup script picks the next free port if any of the first four are already in use.
 
-## Step 1 — Restart the stack
+## Step 1 — Start the Grafana + Tempo stack, Redis, and the app
 
-Open three terminals in `trace-lab/` with the virtual environment active.
-
-```bash
-# terminal 1
-redis-server
-```
+The bundled script `setup-lab13-stack.sh` brings up the Tempo + Grafana stack, installs and starts Redis, bootstraps the Python venv with Flask + Celery + Redis + the OTel SDK, and writes `tasks.py`, `app.py` (with the new `X-Trace-ID` response header), and `tasks_slow.py` (the latency-injection variant used in Step 7). It is idempotent.
 
 ```bash
-# terminal 2
-celery -A tasks worker --loglevel=info
+mkdir -p lab-13-visualizing-distributed-trace
+cd lab-13-visualizing-distributed-trace
+
+# Pull the bundled setup script straight from the repo.
+curl -fsSL -o setup-lab13-stack.sh \
+  https://raw.githubusercontent.com/mahiiabdullah/Labs/main/Labs/lab-13-visualizing-distributed-trace/setup-lab13-stack.sh
+
+chmod +x setup-lab13-stack.sh
+./setup-lab13-stack.sh
 ```
-![](./images/output-1.png)
+
+If `curl` is missing, use `wget`:
 
 ```bash
-# terminal 3
-export OTEL_SERVICE_NAME=flask-api
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-export OTEL_TRACES_EXPORTER=otlp
-export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-opentelemetry-instrument --service_name=flask-api \
-  flask --app app run --port 8000
+wget -O setup-lab13-stack.sh \
+  https://raw.githubusercontent.com/mahiiabdullah/Labs/main/Labs/lab-13-visualizing-distributed-trace/setup-lab13-stack.sh
+chmod +x setup-lab13-stack.sh
+./setup-lab13-stack.sh
 ```
-![](./images/output-2.png)
 
-The Flask API is reachable on `http://localhost:8000`. The worker is consuming tasks from Redis.
-
-## Step 2 — Add the trace ID header to the response
+Load the chosen ports into your shell so every later step can reference them:
 
 ```bash
-cat > app.py <<'EOF'
-import socket
-from flask import Flask, jsonify, request, make_response
-from celery import Celery
-from tasks import celery_app, process_item
-from opentelemetry import trace
-from opentelemetry.propagate import inject
-
-flask_app = Flask(__name__)
-flask_app.config["CELERY_BROKER_URL"] = "redis://localhost:6379/0"
-flask_app.config["CELERY_RESULT_BACKEND"] = "redis://localhost:6379/0"
-celery_app.conf.update(broker_url=flask_app.config["CELERY_BROKER_URL"])
-tracer = trace.get_tracer(__name__)
-
-@flask_app.post("/process")
-def enqueue_process():
-    item_id = request.json.get("item_id")
-    carrier = {}
-    inject(carrier)
-    process_item.delay(item_id, carrier=carrier)
-    span = trace.get_current_span()
-    trace_id_hex = format(span.get_span_context().trace_id, "032x")
-    response = make_response(jsonify({"task_id": "...", "trace_id": trace_id_hex}))
-    response.headers["X-Trace-ID"] = trace_id_hex
-    return response
-EOF
+# Fall back to the defaults if the file is missing for any reason.
+set -a
+[ -f .stack-ports ] && . ./.stack-ports || {
+  TEMPO_OTLP_PORT=4318
+  TEMPO_QUERY_PORT=3200
+  GRAFANA_PORT=3000
+  FLASK_PORT=8000
+}
+set +a
+echo "TEMPO_OTLP_PORT=$TEMPO_OTLP_PORT  TEMPO_QUERY_PORT=$TEMPO_QUERY_PORT  GRAFANA_PORT=$GRAFANA_PORT  FLASK_PORT=$FLASK_PORT"
 ```
 
-`format(..., "032x")` produces a 32-character lowercase hex string. Setting it as a header makes the value reachable by any HTTP client.
+The health-check lines at the end of the script (`Tempo ready?`, `Grafana ready?`, `Redis ready?`) should report `200`, `200`, and `PONG` respectively.
 
-## Step 3 — Expose the Flask port through the load balancer
+## Step 2 — Expose the stack + Flask through the load balancer
 
-Open the **Load Balancer** modal in the lab UI. Run this once to find the IP to enter:
+Open the **Load Balancer** modal in the lab UI. Find the IP to enter:
 
 ```bash
 hostname -I
 ```
 
-Use the **first** IP printed as `LB_IP`. Expose:
+Use the **first** IP printed as `LB_IP`. Expose four ports, one at a time — substitute the port numbers your script actually printed:
 
 | Enter IP | Enter Port |
 |---|---|
-| `LB_IP` | `8000` (Flask API) |
+| `LB_IP` | `$TEMPO_OTLP_PORT` (Tempo OTLP) |
+| `LB_IP` | `$TEMPO_QUERY_PORT` (Tempo query) |
+| `LB_IP` | `$GRAFANA_PORT` (Grafana UI) |
+| `LB_IP` | `$FLASK_PORT` (Flask API) |
 
-Lab 9 must already have exposed `4318`, `3200`, and `3001` for the rest of this lab to work.
+Default values are `4318`, `3200`, `3000`, and `8000`. Use whatever the script printed if it had to fall back.
 
-## Step 4 — Trigger the request and capture the header
+Verify the load balancer routes work:
 
 ```bash
-curl -i -X POST http://<LB_IP>:8000/process \
+curl http://<LB_IP>:${TEMPO_QUERY_PORT}/ready
+curl http://<LB_IP>:${GRAFANA_PORT}/api/health
+```
+
+Both should return `200 OK` through the load balancer.
+
+## Step 3 — Start the Celery worker and Flask app
+
+The setup script already created `.venv`, started Redis, and wrote `tasks.py` + `app.py`. Run the worker and the wrapped Flask app in the background so they survive the next `curl` command. Stop them with `kill %1 %2` when you finish.
+
+```bash
+source .venv/bin/activate
+
+export OTEL_SERVICE_NAME=flask-api
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:${TEMPO_OTLP_PORT}
+export OTEL_TRACES_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+
+nohup celery -A tasks worker --loglevel=info \
+    > /tmp/celery.log 2>&1 &
+
+nohup opentelemetry-instrument \
+    --service_name flask-api \
+    --exporter_otlp_endpoint "http://localhost:${TEMPO_OTLP_PORT}" \
+    --exporter_otlp_protocol http/protobuf \
+    -- flask --app app run --host=0.0.0.0 --port=${FLASK_PORT} \
+    > /tmp/flask.log 2>&1 &
+
+sleep 3
+tail -n 5 /tmp/celery.log
+echo '---'
+tail -n 5 /tmp/flask.log
+```
+
+The worker log should show `ready`. The Flask log should show `Running on http://0.0.0.0:${FLASK_PORT}`.
+
+## Step 4 — Trigger the request and capture the X-Trace-ID header
+
+```bash
+curl -i -X POST http://<LB_IP>:${FLASK_PORT}/process \
   -H "Content-Type: application/json" \
   -d '{"item_id": 7}'
 ```
-![](./images/output-3.png)
 
-Save the `X-Trace-ID` value from the response headers.
+The response now carries an `X-Trace-ID` header in addition to the `trace_id` JSON field. Save it for the next step.
+
+`format(..., "032x")` produces a 32-character lowercase hex string. Setting it as a header makes the value reachable by any HTTP client.
 
 ## Step 5 — Open the trace in Grafana
 
-Open `http://<LB_IP>:3001/explore`, pick the Tempo datasource, switch to **Search**, paste the trace ID, and click **Run query**.
-![](./images/output-4.png)
+Open `http://<LB_IP>:${GRAFANA_PORT}/explore`, pick the Tempo datasource, switch to **Search**, paste the trace ID, and click **Run query**.
 
 The waterfall opens with two rows: `POST /process` as the root and `celery-process` as the child.
 
 ## Step 6 — Read the waterfall
 
 The bar width is the span duration. The widest bar in the trace is the slowest operation. Click any bar to expand its attributes.
-![](./images/output-5.png)
 
 The `celery-process` bar is wider than the Flask bar. The worker is the slow part, not the API.
 
 ## Step 7 — Inject latency and confirm attribution
 
-Add `time.sleep(2)` inside `do_work` in `tasks.py`, restart the worker, and trigger another request.
+Restart the worker against the slow-worker variant, then trigger another request:
 
 ```bash
-curl -i -X POST http://<LB_IP>:8000/process \
+kill %1      # stop the previous celery worker (Flask is still %2)
+nohup celery -A tasks_slow worker --loglevel=info \
+    > /tmp/celery.log 2>&1 &
+
+sleep 2
+
+curl -i -X POST http://<LB_IP>:${FLASK_PORT}/process \
   -H "Content-Type: application/json" \
   -d '{"item_id": 99}'
 ```
-![](./images/output-6.png)
 
-Paste the new `X-Trace-ID` into Tempo. The `celery-process` bar is now the widest by far. The latency is attributed to the worker, where it happened. Remove the `sleep` after observing.
+Save the new `X-Trace-ID` and paste it into Tempo. The `celery-process` bar is now the widest by far. The latency is attributed to the worker, where it happened.
+
+`tasks_slow.py` adds `time.sleep(2)` inside `do_work`. To go back to normal, restart the worker against `tasks` (`kill %1` then `nohup celery -A tasks worker --loglevel=info &`).
 
 ## Next Steps
 
-Stop the worker and API with `Ctrl+C`. Remove the `8000` port from the Load Balancer modal. The Labs 9–13 series now answers "why is this request slow?" from a single trace ID. The next module covers metrics and logs with Prometheus and Loki.
+Stop the worker and the wrapped Flask app with `kill %1 %2`. Stop the stack with `docker compose down`. Remove the four ports from the Load Balancer modal. The Labs 9–13 series now answers "why is this request slow?" from a single trace ID. The next module covers metrics and logs with Prometheus and Loki.
