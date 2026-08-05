@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#dc382d"/>
+      <stop offset="100%" stop-color="#a41e11"/>
+    </linearGradient>
+  </defs>
+  <polygon points="64,8 116,36 116,92 64,120 12,92 12,36" fill="url(#g)"/>
+  <polygon points="64,8 116,36 64,64 12,36" fill="#ffffff" fill-opacity="0.18"/>
+  <polygon points="64,64 116,36 116,92 64,120" fill="#000000" fill-opacity="0.15"/>
+  <text x="64" y="78" font-family="Inter, Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="#ffffff" text-anchor="middle">Redis</text>
+</svg>

@@ -2,113 +2,91 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" font-family="Inter, Helvetica, Arial, sans-serif">
   <style>
     @keyframes dash-flow { to { stroke-dashoffset: 0; } }
-    .title { font-size: 34px; font-weight: 700; fill: #172033; text-anchor: middle; }
-    .subtitle { font-size: 16px; fill: #64748b; text-anchor: middle; }
-    .card-title { font-size: 22px; font-weight: 700; fill: #172033; text-anchor: middle; }
-    .card-sub { font-size: 16px; fill: #475569; text-anchor: middle; }
-    .card-code { font: 14px Menlo, Consolas, monospace; fill: #334155; text-anchor: middle; }
-    .edge-label { font-size: 16px; font-weight: 600; fill: #475569; text-anchor: middle; }
-    .note { font-size: 14px; fill: #64748b; text-anchor: middle; font-style: italic; }
-    .edge { stroke: #64748b; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 12 10; stroke-dashoffset: -22; animation: dash-flow 800ms linear infinite; fill: none; }
+    .title { font-size: 30px; font-weight: 700; fill: #172033; text-anchor: middle; }
+    .role { font-size: 14px; font-style: italic; fill: #64748b; text-anchor: middle; }
+    .edge-label { font-size: 15px; font-weight: 600; fill: #475569; text-anchor: middle; }
+    .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
+    .edge {
+      stroke: #475569;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 12 10;
+      stroke-dashoffset: -22;
+      animation: dash-flow 800ms linear infinite;
+      fill: none;
+    }
   </style>
   <defs>
-    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#94a3b8" flood-opacity="0.18"/></filter>
-    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M0 0 L12 6 L0 12 Z" fill="#64748b"/></marker>
+    <marker id="arr" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M0 0 L12 6 L0 12 Z" fill="#475569"/></marker>
   </defs>
 
-  <rect width="1500" height="760" fill="#fbfdff"/>
+  <rect width="1500" height="760" fill="#ffffff"/>
   <text class="title" x="750" y="52">End-to-End Trace: Flask → Celery → Tempo → Grafana</text>
 
-  <g id="client-card" filter="url(#shadow)">
-    <rect x="85" y="160" width="250" height="190" rx="24" fill="#eef6ff" stroke="#93c5fd" stroke-width="1.8"/>
-    <text class="card-title" x="210" y="220">HTTP client</text>
-    <text class="card-sub" x="210" y="252">triggers the request</text>
-    <text class="card-code" x="210" y="295">POST /process</text>
-    <text class="card-sub" x="210" y="332" font-style="italic">Start the trace</text>
+  <!-- Client -->
+  <g transform="translate(85,160)">
+    <rect class="box" width="250" height="190" rx="24"/>
+    <g transform="translate(105,30)">
+      <rect width="40" height="32" rx="4" fill="#0f172a"/>
+      <text x="6" y="22" fill="#22c55e" font-family="monospace" font-size="14">&gt;_</text>
+    </g>
+    <text class="role" x="125" y="120">POST /process</text>
   </g>
 
-  <g id="flask-card" filter="url(#shadow)">
-    <rect x="615" y="160" width="270" height="190" rx="24" fill="#f4f0ff" stroke="#c4b5fd" stroke-width="1.8"/>
-    <text class="card-title" x="750" y="215">Flask API</text>
-    <text class="card-sub" x="750" y="247">span 1 — server</text>
-    <text class="card-code" x="750" y="287">trace_id = span.trace_id</text>
-    <text class="card-code" x="750" y="310">X-Trace-ID header</text>
-    <text class="card-sub" x="750" y="340" font-style="italic">Open and capture</text>
+  <!-- Flask -->
+  <g transform="translate(615,160)">
+    <rect class="box" width="270" height="190" rx="24"/>
+    <image href="./logos/flask-wordmark.svg" x="35" y="50" width="200" height="70"/>
+    <text class="role" x="135" y="160">X-Trace-ID</text>
   </g>
 
-  <g id="broker-card" filter="url(#shadow)">
-    <rect x="1175" y="160" width="240" height="190" rx="24" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.8"/>
-    <text class="card-title" x="1295" y="220">Redis broker</text>
-    <text class="card-sub" x="1295" y="252">Celery queue</text>
-    <text class="card-code" x="1295" y="295">task + carrier</text>
-    <text class="card-sub" x="1295" y="332" font-style="italic">Hand off and wait</text>
+  <!-- Redis -->
+  <g transform="translate(1175,160)">
+    <rect class="box" width="240" height="190" rx="24"/>
+    <image href="./logos/redis.svg" x="60" y="25" width="120" height="120"/>
+    <text class="role" x="120" y="170">broker</text>
   </g>
 
-  <g id="grafana-card" filter="url(#shadow)">
-    <rect x="85" y="500" width="250" height="200" rx="24" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.8"/>
-    <text class="card-title" x="210" y="560">Grafana Explore</text>
-    <text class="card-sub" x="210" y="592">waterfall + service graph</text>
-    <text class="card-code" x="210" y="635">search by trace_id</text>
-    <text class="card-sub" x="210" y="680" font-style="italic">Identify the slowest span</text>
+  <!-- Grafana -->
+  <g transform="translate(85,500)">
+    <rect class="box" width="250" height="200" rx="24"/>
+    <image href="./logos/grafana-wordmark.svg" x="30" y="50" width="190" height="35"/>
+    <image href="./logos/grafana-icon.svg" x="109" y="92" width="32" height="32"/>
+    <text class="role" x="125" y="170">waterfall + service graph</text>
   </g>
 
-  <g id="tempo-card" filter="url(#shadow)">
-    <rect x="615" y="500" width="270" height="200" rx="24" fill="#fff6e8" stroke="#fdba74" stroke-width="1.8"/>
-    <text class="card-title" x="750" y="555">Tempo</text>
-    <text class="card-sub" x="750" y="587">indexed by trace ID</text>
-    <text class="card-code" x="750" y="627">2 spans, 1 trace_id</text>
-    <text class="card-sub" x="750" y="675" font-style="italic">Ready to query</text>
+  <!-- Tempo -->
+  <g transform="translate(615,500)">
+    <rect class="box" width="270" height="200" rx="24"/>
+    <image href="./logos/tempo.svg" x="65" y="30" width="140" height="110"/>
+    <text class="role" x="135" y="175">indexed by trace ID</text>
   </g>
 
-  <g id="worker-card" filter="url(#shadow)">
-    <rect x="1175" y="500" width="240" height="200" rx="24" fill="#fdf4ff" stroke="#f0abfc" stroke-width="1.8"/>
-    <text class="card-title" x="1295" y="555">Celery worker</text>
-    <text class="card-sub" x="1295" y="587">span 2 — celery-process</text>
-    <text class="card-code" x="1295" y="627">propagate.extract(carrier)</text>
-    <text class="card-code" x="1295" y="650">start_as_current_span(...)</text>
-    <text class="card-sub" x="1295" y="680" font-style="italic">Continue the trace</text>
+  <!-- Celery worker -->
+  <g transform="translate(1175,500)">
+    <rect class="box" width="240" height="200" rx="24"/>
+    <image href="./logos/celery.png" x="60" y="25" width="120" height="120"/>
+    <text class="role" x="120" y="175">celery-process</text>
   </g>
 
-  <line class="edge" x1="335" y1="255" x2="607" y2="255" marker-end="url(#arrow)"/>
-  <rect x="432" y="222" width="86" height="30" rx="15" fill="#fbfdff"/>
-  <text class="edge-label" x="475" y="243">HTTP</text>
+  <line class="edge" x1="337" y1="255" x2="613" y2="255" marker-end="url(#arr)"/>
+  <rect x="442" y="225" width="66" height="30" rx="15" fill="#ffffff"/>
+  <text class="edge-label" x="475" y="245">HTTP</text>
 
-  <line class="edge" x1="885" y1="255" x2="1167" y2="255" marker-end="url(#arrow)"/>
-  <rect x="975" y="222" width="102" height="30" rx="15" fill="#fbfdff"/>
-  <text class="edge-label" x="1026" y="243">enqueue</text>
+  <line class="edge" x1="887" y1="255" x2="1173" y2="255" marker-end="url(#arr)"/>
+  <rect x="982" y="225" width="92" height="30" rx="15" fill="#ffffff"/>
+  <text class="edge-label" x="1028" y="245">enqueue</text>
 
-  <line class="edge" x1="1295" y1="350" x2="1295" y2="492" marker-end="url(#arrow)"/>
-  <rect x="1232" y="406" width="126" height="30" rx="15" fill="#fbfdff"/>
+  <line class="edge" x1="1295" y1="352" x2="1295" y2="498" marker-end="url(#arr)"/>
+  <rect x="1232" y="406" width="126" height="30" rx="15" fill="#ffffff"/>
   <text class="edge-label" x="1295" y="427">pick up task</text>
 
-  <line class="edge" x1="1175" y1="600" x2="893" y2="600" marker-end="url(#arrow)"/>
-  <rect x="982" y="568" width="102" height="30" rx="15" fill="#fbfdff"/>
-  <text class="edge-label" x="1033" y="589">export</text>
+  <line class="edge" x1="1173" y1="600" x2="887" y2="600" marker-end="url(#arr)"/>
+  <rect x="982" y="572" width="92" height="30" rx="15" fill="#ffffff"/>
+  <text class="edge-label" x="1028" y="592">export</text>
 
-  <line class="edge" x1="615" y1="600" x2="343" y2="600" marker-end="url(#arrow)"/>
-  <rect x="426" y="568" width="102" height="30" rx="15" fill="#fbfdff"/>
-  <text class="edge-label" x="477" y="589">query</text>
-
-
-  <mxfile host="app.diagrams.net" type="device">
-    <diagram name="Full System Trace" id="lab13-full-system">
-      <mxGraphModel dx="1500" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="760" math="0" shadow="1">
-        <root>
-          <mxCell id="0"/><mxCell id="1" parent="0"/>
-          <mxCell id="title" value="End-to-End Trace: Flask Celery Tempo Grafana" style="text;html=1;align=center;verticalAlign=middle;fontSize=34;fontStyle=1;fontColor=#172033;" vertex="1" parent="1"><mxGeometry x="370" y="22" width="760" height="46" as="geometry"/></mxCell>
-          <mxCell id="client" value="HTTP client&#10;&#10;triggers the request&#10;&#10;POST /process&#10;&#10;Start the trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef6ff;strokeColor=#93c5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="85" y="160" width="250" height="190" as="geometry"/></mxCell>
-          <mxCell id="flask" value="Flask API&#10;&#10;span 1 server&#10;&#10;trace_id = span.trace_id&#10;X-Trace-ID header&#10;&#10;Open and capture" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f0ff;strokeColor=#c4b5fd;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="615" y="160" width="270" height="190" as="geometry"/></mxCell>
-          <mxCell id="broker" value="Redis broker&#10;&#10;Celery queue&#10;&#10;task + carrier&#10;&#10;Hand off and wait" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfeff;strokeColor=#67e8f9;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="1175" y="160" width="240" height="190" as="geometry"/></mxCell>
-          <mxCell id="grafana" value="Grafana Explore&#10;&#10;waterfall + service graph&#10;&#10;search by trace_id&#10;&#10;Identify the slowest span" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#6ee7b7;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="85" y="500" width="250" height="200" as="geometry"/></mxCell>
-          <mxCell id="tempo" value="Tempo&#10;&#10;indexed by trace ID&#10;&#10;2 spans, 1 trace_id&#10;&#10;Ready to query" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff6e8;strokeColor=#fdba74;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="615" y="500" width="270" height="200" as="geometry"/></mxCell>
-          <mxCell id="worker" value="Celery worker&#10;&#10;span 2 celery-process&#10;&#10;propagate.extract(carrier)&#10;start_as_current_span(...)&#10;&#10;Continue the trace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdf4ff;strokeColor=#f0abfc;strokeWidth=2;fontSize=17;fontColor=#172033;align=center;verticalAlign=middle;arcSize=12;shadow=1;" vertex="1" parent="1"><mxGeometry x="1175" y="500" width="240" height="200" as="geometry"/></mxCell>
-          <mxCell id="http" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=4;dashed=1;fontSize=16;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="client" target="flask"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="enqueue" value="enqueue" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=4;dashed=1;fontSize=16;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="flask" target="broker"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="pickup" value="pick up task" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=4;dashed=1;fontSize=16;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="broker" target="worker"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="export" value="export" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=4;dashed=1;fontSize=16;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="worker" target="tempo"><mxGeometry relative="1" as="geometry"/></mxCell>
-          <mxCell id="query" value="query" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#64748b;strokeWidth=4;dashed=1;fontSize=16;fontStyle=1;fontColor=#475569;labelBackgroundColor=#fbfdff;" edge="1" parent="1" source="tempo" target="grafana"><mxGeometry relative="1" as="geometry"/></mxCell>
-                  </root>
-      </mxGraphModel>
-    </diagram>
-  </mxfile>
+  <line class="edge" x1="613" y1="600" x2="337" y2="600" marker-end="url(#arr)"/>
+  <rect x="426" y="572" width="98" height="30" rx="15" fill="#ffffff"/>
+  <text class="edge-label" x="475" y="592">query</text>
 </svg>
