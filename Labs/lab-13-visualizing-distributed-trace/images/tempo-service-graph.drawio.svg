@@ -1,41 +1,132 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520" font-family="Inter, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1100" viewBox="0 0 1900 1100" font-family="Inter, Helvetica, Arial, sans-serif">
   <style>
-    @keyframes dash-flow { to { stroke-dashoffset: 0; } }
-    .title { font-size: 28px; font-weight: 700; fill: #172033; text-anchor: middle; }
-    .edge-label { font-size: 14px; font-weight: 600; fill: #475569; text-anchor: middle; }
-    .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
+    @keyframes flow { to { stroke-dashoffset: 0; } }
+    .diagram-title { font-size: 26px; font-weight: 600; fill: #172033; text-anchor: middle; }
+    .zone-title { font-size: 18px; font-weight: 600; fill: #172033; text-anchor: middle; }
+    .box-title { font-size: 18px; font-weight: 600; fill: #172033; text-anchor: middle; }
+    .box-sub { font-size: 14px; fill: #475569; text-anchor: middle; }
+    .cmd { font-size: 14px; font-weight: 600; fill: #1e3a8a; text-anchor: middle; }
+    .zone { fill: #dbeafe; stroke: #93c5fd; stroke-width: 1.5; }
+    .box { fill: #bfdbfe; stroke: #60a5fa; stroke-width: 1.5; }
     .edge {
-      stroke: #475569;
-      stroke-width: 3;
+      stroke: #1e3a8a;
+      stroke-width: 2;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 9 8;
-      stroke-dashoffset: -17;
-      animation: dash-flow 700ms linear infinite;
+      stroke-dasharray: 9 7;
+      stroke-dashoffset: -16;
+      animation: flow 700ms linear infinite;
       fill: none;
     }
   </style>
   <defs>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#475569"/></marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#1e3a8a"/></marker>
   </defs>
 
-  <rect width="1100" height="520" fill="#ffffff"/>
-  <text class="title" x="550" y="48">Tempo Service Graph</text>
+  <rect width="1900" height="1100" fill="#ffffff"/>
+  <text class="diagram-title" x="950" y="50">Tempo Service Graph</text>
 
-  <!-- flask-api -->
-  <g transform="translate(160,170)">
-    <rect class="box" width="240" height="180" rx="26"/>
-    <image href="./logos/flask-wordmark.svg" x="20" y="55" width="200" height="70"/>
-  </g>
+  <!-- ============================================================ -->
+  <!-- LAYOUT — all rows centered horizontally                       -->
+  <!-- Canvas width 1900                                              -->
+  <!--                                                               -->
+  <!-- TOP ROW (4 boxes, 220 wide, 100 gap): total = 220*4+100*3=1180 -->
+  <!--   start x = (1900-1180)/2 = 360                                -->
+  <!--   Client     360..580                                            -->
+  <!--   Flask      680..900                                            -->
+  <!--   Celery    1000..1220                                           -->
+  <!--   Redis     1320..1540                                           -->
+  <!--                                                               -->
+  <!-- BOTTOM ROW (2 zones):                                         -->
+  <!--   Tempo     480..1280  (800 wide)                              -->
+  <!--   Grafana   1380..1660 (280 wide)                              -->
+  <!-- Total = 1180; start x = (1900-1180)/2 = 360                   -->
+  <!-- ============================================================ -->
 
-  <!-- celery-worker -->
-  <g transform="translate(700,170)">
-    <rect class="box" width="240" height="180" rx="26"/>
-    <image href="./logos/celery.png" x="60" y="30" width="120" height="120"/>
-  </g>
+  <!-- Client -->
+  <rect class="zone" x="360" y="120" width="220" height="220" rx="24"/>
+  <text class="zone-title" x="470" y="155">Client</text>
+  <rect class="box" x="380" y="180" width="180" height="140" rx="20"/>
+  <text class="box-title" x="470" y="225">client</text>
+  <text class="box-sub" x="470" y="258">Web / Postman</text>
 
-  <line class="edge" x1="402" y1="260" x2="698" y2="260" marker-end="url(#arr)"/>
-  <rect x="476" y="212" width="138" height="30" rx="15" fill="#ffffff"/>
-  <text class="edge-label" x="545" y="232">requests</text>
+  <!-- Flask API -->
+  <rect class="zone" x="680" y="120" width="220" height="220" rx="24"/>
+  <text class="zone-title" x="790" y="155">Flask API</text>
+  <rect class="box" x="700" y="180" width="180" height="140" rx="20"/>
+  <text class="box-title" x="790" y="225">flask-api</text>
+  <text class="box-sub" x="790" y="258">HTTP entrypoint</text>
+
+  <!-- Celery worker -->
+  <rect class="zone" x="1000" y="120" width="220" height="220" rx="24"/>
+  <text class="zone-title" x="1110" y="155">Celery worker</text>
+  <rect class="box" x="1020" y="180" width="180" height="140" rx="20"/>
+  <text class="box-title" x="1110" y="225">celery-worker</text>
+  <text class="box-sub" x="1110" y="258">async task</text>
+
+  <!-- Redis broker -->
+  <rect class="zone" x="1320" y="120" width="220" height="220" rx="24"/>
+  <text class="zone-title" x="1430" y="155">Redis broker</text>
+  <rect class="box" x="1340" y="180" width="180" height="140" rx="20"/>
+  <text class="box-title" x="1430" y="225">redis</text>
+  <text class="box-sub" x="1430" y="258">broker + result</text>
+
+  <!-- Tempo (collector + storage) -->
+  <rect class="zone" x="360" y="480" width="920" height="280" rx="24"/>
+  <text class="zone-title" x="820" y="515">Tempo</text>
+
+  <rect class="box" x="390" y="540" width="260" height="200" rx="20"/>
+  <text class="box-title" x="520" y="590">tempo-distributor</text>
+  <text class="box-sub" x="520" y="622">:4318 ingester</text>
+  <text class="box-sub" x="520" y="650">trace collection</text>
+
+  <rect class="box" x="690" y="540" width="260" height="200" rx="20"/>
+  <text class="box-title" x="820" y="590">Tempo storage</text>
+  <text class="box-sub" x="820" y="622">local trace backend</text>
+  <text class="box-sub" x="820" y="650">index by trace ID</text>
+
+  <!-- Grafana (separate zone on the right) -->
+  <rect class="zone" x="1320" y="480" width="220" height="280" rx="24"/>
+  <text class="zone-title" x="1430" y="515">Grafana</text>
+  <rect class="box" x="1340" y="540" width="180" height="200" rx="20"/>
+  <text class="box-title" x="1430" y="590">grafana</text>
+  <text class="box-sub" x="1430" y="622">service graph</text>
+  <text class="box-sub" x="1430" y="650">+ waterfall</text>
+
+  <!-- ============================================================ -->
+  <!-- EDGES — corridor at y=400 separates top row from Tempo row    -->
+  <!-- ============================================================ -->
+
+  <!-- 1: client -> flask-api (right, y=240) -->
+  <line class="edge" x1="582" y1="240" x2="678" y2="240" marker-end="url(#arr)"/>
+  <text class="cmd" x="630" y="228">POST</text>
+
+  <!-- 2: flask-api -> celery-worker (right, y=240) -->
+  <line class="edge" x1="902" y1="240" x2="998" y2="240" marker-end="url(#arr)"/>
+  <text class="cmd" x="950" y="228">enqueue</text>
+
+  <!-- 3: celery-worker -> redis (right, store, y=220, upper corridor) -->
+  <line class="edge" x1="1222" y1="220" x2="1318" y2="220" marker-end="url(#arr)"/>
+  <text class="cmd" x="1270" y="208">store</text>
+
+  <!-- 4: redis -> celery-worker (left, pull, y=290, lower corridor) -->
+  <line class="edge" x1="1318" y1="290" x2="1222" y2="290" marker-end="url(#arr)"/>
+  <text class="cmd" x="1270" y="312">pull</text>
+
+  <!-- 5: flask-api -> tempo-distributor (straight down at x=790) -->
+  <line class="edge" x1="790" y1="342" x2="790" y2="538" marker-end="url(#arr)"/>
+  <text class="cmd" x="755" y="445">export</text>
+
+  <!-- 6: celery-worker -> tempo-distributor (down at x=1110, then left along y=400, then down) -->
+  <path class="edge" d="M 1110 322 L 1110 400 L 520 400 L 520 538" marker-end="url(#arr)"/>
+  <text class="cmd" x="830" y="388">export</text>
+
+  <!-- 7: redis -> tempo-distributor (down at x=1430, then left along y=400, then down) -->
+  <path class="edge" d="M 1430 322 L 1430 400 L 620 400 L 620 538" marker-end="url(#arr)"/>
+  <text class="cmd" x="1040" y="388">export</text>
+
+  <!-- 8: Tempo storage -> grafana (right, y=640) -->
+  <line class="edge" x1="952" y1="640" x2="1338" y2="640" marker-end="url(#arr)"/>
+  <text class="cmd" x="1145" y="628">query</text>
 </svg>

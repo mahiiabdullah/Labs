@@ -1,64 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="500" viewBox="0 0 1100 500" font-family="Inter, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="700" viewBox="0 0 1100 700" font-family="Inter, Helvetica, Arial, sans-serif">
   <style>
-    @keyframes dash-flow { to { stroke-dashoffset: 0; } }
-    .title { font-size: 26px; font-weight: 700; fill: #172033; text-anchor: middle; }
-    .span-name { font-size: 18px; font-weight: 700; fill: #172033; text-anchor: middle; }
+    @keyframes flow { to { stroke-dashoffset: 0; } }
+    .diagram-title { font-size: 26px; font-weight: 700; fill: #172033; text-anchor: middle; }
+    .box-title { font-size: 18px; font-weight: 700; fill: #172033; text-anchor: middle; }
+    .box-sub { font-size: 13px; fill: #64748b; text-anchor: middle; }
+    .cmd { font-size: 13px; font-weight: 600; fill: #111827; text-anchor: middle; }
     .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
-    .tree {
+    .edge {
       stroke: #475569;
-      stroke-width: 2.5;
+      stroke-width: 2;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 9 8;
-      stroke-dashoffset: -17;
-      animation: dash-flow 700ms linear infinite;
+      stroke-dasharray: 8 6;
+      stroke-dashoffset: -14;
+      animation: flow 700ms linear infinite;
       fill: none;
     }
   </style>
-
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#475569"/></marker>
   </defs>
 
-  <rect width="1100" height="500" fill="#ffffff"/>
-  <text class="title" x="550" y="40">Manual Span Hierarchy</text>
+  <rect width="1100" height="700" fill="#ffffff"/>
+  <text class="diagram-title" x="550" y="50">Manual Span Hierarchy</text>
 
-  <!-- Root -->
-  <g transform="translate(390,90)">
-    <rect class="box" width="320" height="140" rx="18"/>
-    <image href="./logos/flask-icon.png" x="40" y="35" width="70" height="70"/>
-    <text class="span-name" x="220" y="80">handle_request</text>
+  <!-- Root: handle_request (top, centered) — no logo, title dead-center -->
+  <g transform="translate(440,100)">
+    <rect class="box" width="220" height="120" rx="18"/>
+    <text class="box-title" x="110" y="55">handle_request</text>
+    <text class="box-sub" x="110" y="80">root span · my-api</text>
   </g>
 
-  <!-- db_lookup -->
-  <g transform="translate(120,340)">
-    <rect class="box" width="320" height="140" rx="18"/>
-    <g transform="translate(40,40)">
-      <ellipse cx="16" cy="6" rx="14" ry="5" fill="#ffffff" stroke="#1f2937" stroke-width="2"/>
-      <path d="M2 6 v22 a14 5 0 0 0 28 0 v-22" fill="#ffffff" stroke="#1f2937" stroke-width="2"/>
-      <ellipse cx="16" cy="18" rx="14" ry="5" fill="none" stroke="#1f2937" stroke-width="2"/>
-    </g>
-    <text class="span-name" x="220" y="80">db_lookup</text>
+  <!-- db_lookup (bottom-left) -->
+  <g transform="translate(140,420)">
+    <rect class="box" width="320" height="180" rx="18"/>
+    <text class="box-title" x="160" y="85">db_lookup</text>
+    <text class="box-sub" x="160" y="115">SELECT * FROM users</text>
   </g>
 
-  <!-- cache_check -->
-  <g transform="translate(660,340)">
-    <rect class="box" width="320" height="140" rx="18"/>
-    <g transform="translate(40,40)">
-      <rect x="2" y="4" width="28" height="28" rx="4" fill="#ffffff" stroke="#1f2937" stroke-width="2"/>
-      <line x1="2" y1="14" x2="30" y2="14" stroke="#1f2937" stroke-width="2"/>
-      <line x1="2" y1="24" x2="30" y2="24" stroke="#1f2937" stroke-width="2"/>
-    </g>
-    <text class="span-name" x="220" y="80">cache_check</text>
+  <!-- cache_check (bottom-right) -->
+  <g transform="translate(640,420)">
+    <rect class="box" width="320" height="180" rx="18"/>
+    <text class="box-title" x="160" y="85">cache_check</text>
+    <text class="box-sub" x="160" y="115">GET key:user:42</text>
   </g>
 
-  <line class="tree" x1="550" y1="232" x2="550" y2="298" marker-end="url(#arr)"/>
-  <line class="tree" x1="280" y1="300" x2="820" y2="300"/>
-  <line class="tree" x1="280" y1="300" x2="280" y2="338" marker-end="url(#arr)"/>
-  <line class="tree" x1="820" y1="300" x2="820" y2="338" marker-end="url(#arr)"/>
+  <!-- Arrow 1: handle_request -> junction (down) -->
+  <line class="edge" x1="550" y1="222" x2="550" y2="358" marker-end="url(#arr)"/>
+  <text class="cmd" x="585" y="295">start span</text>
 
-  <circle cx="550" cy="300" r="5" fill="#475569"/>
-  <circle cx="280" cy="300" r="5" fill="#475569"/>
-  <circle cx="820" cy="300" r="5" fill="#475569"/>
+  <!-- Horizontal junction at y=360 -->
+  <line class="edge" x1="300" y1="360" x2="800" y2="360"/>
+
+  <!-- Arrow 2: junction -> db_lookup (down) -->
+  <line class="edge" x1="300" y1="360" x2="300" y2="418" marker-end="url(#arr)"/>
+  <text class="cmd" x="300" y="395">child</text>
+
+  <!-- Arrow 3: junction -> cache_check (down) -->
+  <line class="edge" x1="800" y1="360" x2="800" y2="418" marker-end="url(#arr)"/>
+  <text class="cmd" x="800" y="395">child</text>
 </svg>

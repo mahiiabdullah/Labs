@@ -1,79 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" font-family="Inter, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="720" viewBox="0 0 900 720" font-family="Inter, Helvetica, Arial, sans-serif">
   <style>
-    @keyframes dash-flow { to { stroke-dashoffset: 0; } }
-    .title { font-size: 26px; font-weight: 700; fill: #172033; text-anchor: middle; }
-    .role { font-size: 14px; fill: #64748b; text-anchor: middle; }
-    .edge-label { font-size: 13px; font-weight: 600; fill: #475569; text-anchor: middle; }
-    .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
+    @keyframes flow { to { stroke-dashoffset: 0; } }
+    .diagram-title { font-size: 28px; font-weight: 600; fill: #172033; text-anchor: middle; }
+    .zone-label { font-size: 18px; font-weight: 600; fill: #172033; text-anchor: middle; }
+    .box-title { font-size: 18px; font-weight: 600; fill: #172033; text-anchor: middle; }
+    .box-sub { font-size: 14px; fill: #475569; text-anchor: middle; }
+    .cmd { font-size: 14px; font-weight: 600; fill: #1e3a8a; text-anchor: middle; }
+    .zone { fill: #dbeafe; stroke: #93c5fd; stroke-width: 1.5; }
+    .box { fill: #bfdbfe; stroke: #60a5fa; stroke-width: 1.5; }
     .edge {
-      stroke: #475569;
-      stroke-width: 2.5;
+      stroke: #1e3a8a;
+      stroke-width: 2;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 9 8;
-      stroke-dashoffset: -17;
-      animation: dash-flow 700ms linear infinite;
+      stroke-dasharray: 8 6;
+      stroke-dashoffset: -14;
+      animation: flow 700ms linear infinite;
       fill: none;
     }
   </style>
   <defs>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#475569"/></marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#1e3a8a"/></marker>
   </defs>
 
-  <rect width="1200" height="380" fill="#ffffff"/>
-  <text class="title" x="600" y="40">Grafana + Tempo Trace Architecture</text>
+  <rect width="900" height="720" fill="#ffffff"/>
 
-  <!-- Client -->
-  <g transform="translate(80,110)">
-    <rect class="box" width="200" height="220" rx="20"/>
-    <g transform="translate(60,40)">
-      <rect width="80" height="60" rx="8" fill="#0f172a"/>
-      <text x="14" y="36" fill="#22c55e" font-family="monospace" font-size="22">&gt;_</text>
-      <line x1="6" y1="46" x2="74" y2="46" stroke="#22c55e" stroke-width="1.5"/>
-      <line x1="6" y1="54" x2="50" y2="54" stroke="#22c55e" stroke-width="1.5"/>
-    </g>
-    <text class="role" x="100" y="150" font-weight="700">curl client</text>
-    <text class="role" x="100" y="170" font-style="italic">OTLP HTTP POST</text>
-  </g>
+  <!-- Diagram title -->
+  <text class="diagram-title" x="450" y="40">Grafana + Tempo Trace Architecture</text>
 
-  <!-- Tempo -->
-  <g transform="translate(380,110)">
-    <rect class="box" width="200" height="220" rx="20"/>
-    <image href="./logos/tempo.svg" x="50" y="35" width="100" height="80"/>
-    <text class="role" x="100" y="140" font-weight="700">Tempo</text>
-    <text class="role" x="100" y="160" font-style="italic">:4318 receiver</text>
-  </g>
+  <!-- Top zone: send + receive -->
+  <rect class="zone" x="40" y="80" width="820" height="280" rx="24"/>
+  <text class="zone-label" x="450" y="120">Send + receive path</text>
 
-  <!-- Local storage -->
-  <g transform="translate(680,110)">
-    <rect class="box" width="200" height="220" rx="20"/>
-    <g transform="translate(72,40)" fill="#94a3b8">
-      <rect width="56" height="14" rx="3"/>
-      <rect y="22" width="56" height="14" rx="3"/>
-      <rect y="44" width="56" height="14" rx="3"/>
-    </g>
-    <text class="role" x="100" y="150" font-weight="700">/var/tempo/traces</text>
-    <text class="role" x="100" y="170" font-style="italic">local backend</text>
-  </g>
+  <!-- Box: curl client (top-left) -->
+  <rect class="box" x="80" y="170" width="280" height="160" rx="20"/>
+  <text class="box-title" x="220" y="225">curl client</text>
+  <text class="box-sub" x="220" y="260">OTLP HTTP POST</text>
 
-  <!-- Grafana -->
-  <g transform="translate(980,110)">
-    <rect class="box" width="200" height="220" rx="20"/>
-    <image href="./logos/grafana-wordmark.svg" x="25" y="50" width="150" height="25"/>
-    <image href="./logos/grafana-icon.svg" x="84" y="85" width="32" height="32"/>
-    <text class="role" x="100" y="160" font-style="italic">Explore + Tempo DS</text>
-  </g>
+  <!-- Box: Tempo receiver (top-right) -->
+  <rect class="box" x="540" y="170" width="280" height="160" rx="20"/>
+  <text class="box-title" x="680" y="225">Tempo receiver</text>
+  <text class="box-sub" x="680" y="260">listening on :4318</text>
 
-  <line class="edge" x1="282" y1="220" x2="378" y2="220" marker-end="url(#arr)"/>
-  <rect x="304" y="200" width="52" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="330" y="216">POST</text>
+  <!-- Arrow 1: curl client -> Tempo receiver (top row, right) -->
+  <line class="edge" x1="362" y1="250" x2="538" y2="250" marker-end="url(#arr)"/>
+  <text class="cmd" x="450" y="240">POST :4318</text>
 
-  <line class="edge" x1="582" y1="220" x2="678" y2="220" marker-end="url(#arr)"/>
-  <rect x="606" y="200" width="48" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="630" y="216">write</text>
+  <!-- Bottom zone: store + visualize -->
+  <rect class="zone" x="40" y="400" width="820" height="280" rx="24"/>
+  <text class="zone-label" x="450" y="440">Store + visualize</text>
 
-  <path class="edge" d="M 780 332 L 780 350 L 1080 350 L 1080 332" marker-end="url(#arr)"/>
-  <rect x="884" y="338" width="92" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="930" y="354">query :3200</text>
+  <!-- Box: Grafana Explore (bottom-left) -->
+  <rect class="box" x="80" y="490" width="280" height="160" rx="20"/>
+  <text class="box-title" x="220" y="545">Grafana Explore</text>
+  <text class="box-sub" x="220" y="580">query by trace ID</text>
+
+  <!-- Box: Tempo storage (bottom-right) -->
+  <rect class="box" x="540" y="490" width="280" height="160" rx="20"/>
+  <text class="box-title" x="680" y="545">Tempo storage</text>
+  <text class="box-sub" x="680" y="580">local trace backend</text>
+
+  <!-- Arrow 2: Tempo receiver (right column top) -> Tempo storage (right column bottom) -->
+  <line class="edge" x1="680" y1="332" x2="680" y2="488" marker-end="url(#arr)"/>
+  <text class="cmd" x="700" y="415">write</text>
+
+  <!-- Arrow 3: Tempo storage -> Grafana Explore (bottom row, left) -->
+  <line class="edge" x1="538" y1="570" x2="362" y2="570" marker-end="url(#arr)"/>
+  <text class="cmd" x="450" y="560">query :3200</text>
 </svg>

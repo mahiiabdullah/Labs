@@ -1,84 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" font-family="Inter, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="860" viewBox="0 0 900 860" font-family="Inter, Helvetica, Arial, sans-serif">
   <style>
-    @keyframes dash-flow { to { stroke-dashoffset: 0; } }
-    .title { font-size: 26px; font-weight: 700; fill: #172033; text-anchor: middle; }
-    .role { font-size: 14px; fill: #64748b; text-anchor: middle; }
-    .edge-label { font-size: 13px; font-weight: 600; fill: #475569; text-anchor: middle; }
-    .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
+    @keyframes flow { to { stroke-dashoffset: 0; } }
+    .diagram-title { font-size: 24px; font-weight: 600; fill: #111827; text-anchor: middle; }
+    .zone-title { font-size: 18px; font-weight: 600; fill: #111827; text-anchor: middle; }
+    .box-title { font-size: 17px; font-weight: 600; fill: #111827; text-anchor: middle; }
+    .box-sub { font-size: 13px; fill: #374151; text-anchor: middle; }
+    .cmd { font-size: 13px; font-weight: 600; fill: #111827; text-anchor: middle; }
+    .zone-outer { fill: #d1fae5; stroke: #6ee7b7; stroke-width: 1.5; }
+    .zone-inner { fill: #a7f3d0; stroke: #34d399; stroke-width: 1.5; }
     .edge {
-      stroke: #475569;
-      stroke-width: 2.5;
+      stroke: #4b5563;
+      stroke-width: 1.8;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 9 8;
-      stroke-dashoffset: -17;
-      animation: dash-flow 700ms linear infinite;
+      stroke-dasharray: 8 6;
+      stroke-dashoffset: -14;
+      animation: flow 700ms linear infinite;
       fill: none;
     }
   </style>
   <defs>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#475569"/></marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#4b5563"/></marker>
   </defs>
 
-  <rect width="1200" height="380" fill="#ffffff"/>
-  <text class="title" x="600" y="40">OpenTelemetry Auto-Instrumentation Flow</text>
+  <rect width="900" height="860" fill="#ffffff"/>
 
-  <!-- Flask -->
-  <g transform="translate(60,110)">
-    <rect class="box" width="180" height="220" rx="20"/>
-    <image href="./logos/flask-wordmark.svg" x="20" y="55" width="140" height="50"/>
-    <text class="role" x="90" y="150" font-style="italic">GET /hello</text>
-  </g>
+  <!-- Diagram title -->
+  <text class="diagram-title" x="450" y="46">OpenTelemetry Auto-Instrumentation Flow</text>
 
-  <!-- OTel wrapper -->
-  <g transform="translate(280,110)">
-    <rect class="box" width="180" height="220" rx="20"/>
-    <image href="./logos/otel.svg" x="20" y="40" width="140" height="60"/>
-    <text class="role" x="90" y="150" font-style="italic">opentelemetry-instrument</text>
-  </g>
+  <!-- Top zone: App process (y: 80-350) -->
+  <rect class="zone-outer" x="40" y="80" width="820" height="270" rx="28"/>
+  <text class="zone-title" x="450" y="115">App process</text>
 
-  <!-- OTLP exporter -->
-  <g transform="translate(500,110)">
-    <rect class="box" width="180" height="220" rx="20"/>
-    <g transform="translate(70,40)">
-      <rect x="0" y="6" width="40" height="28" rx="3" fill="#ffffff" stroke="#06b6d4" stroke-width="2"/>
-      <line x1="8" y1="14" x2="32" y2="14" stroke="#06b6d4" stroke-width="2"/>
-      <line x1="8" y1="22" x2="28" y2="22" stroke="#06b6d4" stroke-width="2"/>
-      <line x1="8" y1="28" x2="22" y2="28" stroke="#06b6d4" stroke-width="2"/>
-    </g>
-    <text class="role" x="90" y="135" font-weight="700">OTLP HTTP</text>
-    <text class="role" x="90" y="155" font-style="italic">POST /v1/traces</text>
-  </g>
+  <!-- Bottom zone: Backend (y: 390-690) -->
+  <rect class="zone-outer" x="40" y="390" width="820" height="300" rx="28"/>
+  <text class="zone-title" x="450" y="425">Backend</text>
 
-  <!-- Tempo -->
-  <g transform="translate(720,110)">
-    <rect class="box" width="180" height="220" rx="20"/>
-    <image href="./logos/tempo.svg" x="40" y="40" width="100" height="80"/>
-    <text class="role" x="90" y="160" font-style="italic">:4318</text>
-  </g>
+  <!-- ===== Top row: y=155..315 ===== -->
+  <!-- Box 1: Flask app (x: 80..300) -->
+  <rect class="zone-inner" x="80" y="155" width="220" height="160" rx="20"/>
+  <text class="box-title" x="190" y="220">Flask app</text>
+  <text class="box-sub" x="190" y="250">GET /hello</text>
 
-  <!-- Grafana -->
-  <g transform="translate(940,110)">
-    <rect class="box" width="180" height="220" rx="20"/>
-    <image href="./logos/grafana-wordmark.svg" x="20" y="55" width="140" height="22"/>
-    <image href="./logos/grafana-icon.svg" x="74" y="85" width="32" height="32"/>
-    <text class="role" x="90" y="165" font-style="italic">Explore</text>
-  </g>
+  <!-- Box 2: opentelemetry-instrument (x: 600..820) -->
+  <rect class="zone-inner" x="600" y="155" width="220" height="160" rx="20"/>
+  <text class="box-title" x="710" y="220">opentelemetry-instrument</text>
+  <text class="box-sub" x="710" y="250">wraps Flask process</text>
 
-  <line class="edge" x1="242" y1="220" x2="278" y2="220" marker-end="url(#arr)"/>
-  <rect x="240" y="200" width="44" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="262" y="216">import</text>
+  <!-- ===== Bottom row: y=465..625 ===== -->
+  <!-- Box 3: OTLP exporter (x: 80..300) -->
+  <rect class="zone-inner" x="80" y="465" width="220" height="160" rx="20"/>
+  <text class="box-title" x="190" y="530">OTLP exporter</text>
+  <text class="box-sub" x="190" y="560">POST /v1/traces</text>
 
-  <line class="edge" x1="462" y1="220" x2="498" y2="220" marker-end="url(#arr)"/>
-  <rect x="464" y="200" width="36" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="482" y="216">span</text>
+  <!-- Box 4: Tempo receiver (x: 600..820) -->
+  <rect class="zone-inner" x="600" y="465" width="220" height="160" rx="20"/>
+  <text class="box-title" x="710" y="530">Tempo receiver</text>
+  <text class="box-sub" x="710" y="560">:4318 local store</text>
 
-  <line class="edge" x1="682" y1="220" x2="718" y2="220" marker-end="url(#arr)"/>
-  <rect x="668" y="200" width="64" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="700" y="216">http/proto</text>
+  <!-- ===== Arrow 1: Flask app -> opentelemetry-instrument (top row, mid-height y=235) ===== -->
+  <line class="edge" x1="302" y1="235" x2="598" y2="235" marker-end="url(#arr)"/>
+  <text class="cmd" x="450" y="225">boot</text>
 
-  <line class="edge" x1="902" y1="220" x2="938" y2="220" marker-end="url(#arr)"/>
-  <rect x="908" y="200" width="26" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="921" y="216">:3200</text>
+  <!-- ===== Arrow 2: opentelemetry-instrument (bottom) -> Tempo receiver (top) ===== -->
+  <!-- exits bottom-center of box 2 (x=710, y=317), enters top-center of box 4 (x=710, y=463) -->
+  <line class="edge" x1="710" y1="317" x2="710" y2="463" marker-end="url(#arr)"/>
+  <text class="cmd" x="730" y="395">export</text>
+
+  <!-- ===== Arrow 3: Tempo receiver -> OTLP exporter (bottom row, mid-height y=545) ===== -->
+  <line class="edge" x1="598" y1="545" x2="302" y2="545" marker-end="url(#arr)"/>
+  <text class="cmd" x="450" y="535">ack 200</text>
+
+  <!-- ===== Box 5: Grafana Explore (outside Backend zone, directly under Tempo receiver) ===== -->
+  <rect class="zone-inner" x="600" y="730" width="220" height="100" rx="20"/>
+  <text class="box-title" x="710" y="770">Grafana Explore</text>
+  <text class="box-sub" x="710" y="798">query by trace ID</text>
+
+  <!-- ===== Arrow 4: Tempo receiver -> Grafana Explore (straight down, in the gap between zones) ===== -->
+  <line class="edge" x1="710" y1="627" x2="710" y2="728" marker-end="url(#arr)"/>
+  <text class="cmd" x="730" y="685">GET /trace</text>
 </svg>

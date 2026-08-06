@@ -1,80 +1,150 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" font-family="Inter, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1850" height="1000" viewBox="0 0 1850 1000" font-family="Inter, Helvetica, Arial, sans-serif">
   <style>
-    @keyframes dash-flow { to { stroke-dashoffset: 0; } }
-    .title { font-size: 26px; font-weight: 700; fill: #172033; text-anchor: middle; }
-    .role { font-size: 14px; fill: #64748b; text-anchor: middle; }
-    .edge-label { font-size: 13px; font-weight: 600; fill: #475569; text-anchor: middle; }
-    .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
+    @keyframes flow { to { stroke-dashoffset: 0; } }
+    .diagram-title { font-size: 26px; font-weight: 600; fill: #111827; text-anchor: middle; }
+    .zone-title { font-size: 18px; font-weight: 600; fill: #111827; text-anchor: middle; }
+    .box-title { font-size: 18px; font-weight: 600; fill: #111827; text-anchor: middle; }
+    .box-sub { font-size: 14px; fill: #374151; text-anchor: middle; }
+    .cmd { font-size: 14px; font-weight: 600; fill: #111827; text-anchor: middle; }
+    .zone-outer { fill: #fef9c3; stroke: #d4d4d8; stroke-width: 1.5; }
+    .zone-inner { fill: #f5f5dc; stroke: #a8a29e; stroke-width: 1.5; }
     .edge {
-      stroke: #475569;
-      stroke-width: 2.5;
+      stroke: #4b5563;
+      stroke-width: 2;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 9 8;
+      stroke-dasharray: 10 7;
       stroke-dashoffset: -17;
-      animation: dash-flow 700ms linear infinite;
+      animation: flow 700ms linear infinite;
       fill: none;
     }
   </style>
   <defs>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#475569"/></marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#4b5563"/></marker>
   </defs>
 
-  <rect width="1200" height="380" fill="#ffffff"/>
-  <text class="title" x="600" y="40">Trace Context Propagation: Flask → Celery</text>
+  <rect width="1850" height="1000" fill="#ffffff"/>
 
-  <!-- Client -->
-  <g transform="translate(40,110)">
-    <rect class="box" width="160" height="220" rx="20"/>
-    <g transform="translate(60,40)">
-      <rect width="40" height="32" rx="4" fill="#0f172a"/>
-      <text x="6" y="22" fill="#22c55e" font-family="monospace" font-size="14">&gt;_</text>
-    </g>
-    <text class="role" x="80" y="160" font-style="italic">POST /process</text>
-  </g>
+  <!-- Diagram title -->
+  <text class="diagram-title" x="850" y="50">Trace Context Propagation: Flask → Celery</text>
 
-  <!-- Flask -->
-  <g transform="translate(240,110)">
-    <rect class="box" width="180" height="220" rx="20"/>
-    <image href="./logos/flask-wordmark.svg" x="20" y="55" width="140" height="50"/>
-    <text class="role" x="90" y="160" font-style="italic">inject(carrier)</text>
-  </g>
+  <!-- ============================================================ -->
+  <!-- TOP ROW: Client | Flask | Redis (BIG gaps: 200px each)       -->
+  <!-- Column 1: x=60..400   Gap 200   Column 2: x=600..920          -->
+  <!-- Gap 200  Column 3: x=1120..1440                                -->
+  <!-- ============================================================ -->
 
-  <!-- Redis -->
-  <g transform="translate(460,110)">
-    <rect class="box" width="180" height="220" rx="20"/>
-    <image href="./logos/redis.svg" x="50" y="35" width="80" height="80"/>
-    <text class="role" x="90" y="160" font-style="italic">broker</text>
-  </g>
+  <!-- Component 1: Client (x: 60..400) -->
+  <rect class="zone-outer" x="60" y="100" width="340" height="560" rx="32"/>
+  <text class="zone-title" x="230" y="138">Client</text>
 
-  <!-- Celery worker -->
-  <g transform="translate(680,110)">
-    <rect class="box" width="180" height="220" rx="20"/>
-    <image href="./logos/celery.png" x="50" y="35" width="80" height="80"/>
-    <text class="role" x="90" y="160" font-style="italic">extract(carrier)</text>
-  </g>
+  <rect class="zone-inner" x="90" y="170" width="280" height="240" rx="22"/>
+  <text class="box-title" x="230" y="240">Client</text>
+  <text class="box-sub" x="230" y="280">Web / Postman</text>
+  <text class="box-sub" x="230" y="312">Submit Task</text>
+  <text class="box-sub" x="230" y="344">Get Status</text>
 
-  <!-- Tempo -->
-  <g transform="translate(900,110)">
-    <rect class="box" width="180" height="220" rx="20"/>
-    <image href="./logos/tempo.svg" x="40" y="40" width="100" height="80"/>
-    <text class="role" x="90" y="160" font-style="italic">:4318</text>
-  </g>
+  <rect class="zone-inner" x="90" y="440" width="280" height="200" rx="22"/>
+  <text class="box-title" x="230" y="500">Tracer</text>
+  <text class="box-sub" x="230" y="540">traceparent header</text>
+  <text class="box-sub" x="230" y="572">generated per request</text>
 
-  <line class="edge" x1="202" y1="220" x2="238" y2="220" marker-end="url(#arr)"/>
-  <rect x="206" y="200" width="32" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="222" y="216">HTTP</text>
+  <!-- Component 2: Flask API (x: 600..920) -->
+  <rect class="zone-outer" x="600" y="100" width="320" height="560" rx="32"/>
+  <text class="zone-title" x="760" y="138">Flask API</text>
 
-  <line class="edge" x1="422" y1="220" x2="458" y2="220" marker-end="url(#arr)"/>
-  <rect x="420" y="200" width="44" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="442" y="216">enqueue</text>
+  <rect class="zone-inner" x="630" y="170" width="260" height="180" rx="22"/>
+  <text class="box-title" x="760" y="220">Endpoints</text>
+  <text class="box-sub" x="760" y="258">POST /task/send-email</text>
+  <text class="box-sub" x="760" y="286">POST /task/generate-pdf</text>
 
-  <line class="edge" x1="642" y1="220" x2="678" y2="220" marker-end="url(#arr)"/>
-  <rect x="640" y="200" width="44" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="662" y="216">pick up</text>
+  <rect class="zone-inner" x="630" y="380" width="260" height="240" rx="22"/>
+  <text class="box-title" x="760" y="430">Responsibilities</text>
+  <text class="box-sub" x="760" y="468">Validate request</text>
+  <text class="box-sub" x="760" y="496">Return task_id / status</text>
+  <text class="box-sub" x="760" y="524">inject(carrier)</text>
+  <text class="box-sub" x="760" y="552">propagate context</text>
 
-  <line class="edge" x1="862" y1="220" x2="898" y2="220" marker-end="url(#arr)"/>
-  <rect x="866" y="200" width="32" height="22" rx="11" fill="#ffffff"/>
-  <text class="edge-label" x="882" y="216">export</text>
+  <!-- Component 3: Redis (x: 1120..1440) -->
+  <rect class="zone-outer" x="1120" y="100" width="320" height="560" rx="32"/>
+  <text class="zone-title" x="1280" y="138">Redis</text>
+
+  <rect class="zone-inner" x="1150" y="170" width="260" height="220" rx="22"/>
+  <text class="box-title" x="1280" y="225">Broker (DB 0)</text>
+  <text class="box-sub" x="1280" y="260">Task Queue</text>
+
+  <rect class="zone-inner" x="1150" y="420" width="260" height="220" rx="22"/>
+  <text class="box-title" x="1280" y="475">Result Backend (DB 1)</text>
+  <text class="box-sub" x="1280" y="510">Store Task State</text>
+  <text class="box-sub" x="1280" y="538">&amp; Results</text>
+
+  <!-- ============================================================ -->
+  <!-- BOTTOM ROW: Tempo (LEFT) | Celery (RIGHT)                    -->
+  <!-- ============================================================ -->
+
+  <!-- Component 5: Tempo (x: 60..800) -->
+  <rect class="zone-outer" x="60" y="720" width="740" height="240" rx="32"/>
+  <text class="zone-title" x="430" y="758">Tempo</text>
+
+  <rect class="zone-inner" x="90" y="790" width="240" height="150" rx="22"/>
+  <text class="box-title" x="210" y="840">Tempo</text>
+  <text class="box-sub" x="210" y="878">indexed by</text>
+  <text class="box-sub" x="210" y="906">trace ID · :4318</text>
+
+  <rect class="zone-inner" x="360" y="790" width="220" height="150" rx="22"/>
+  <text class="box-title" x="470" y="840">Trace store</text>
+  <text class="box-sub" x="470" y="878">query by trace ID</text>
+  <text class="box-sub" x="470" y="906">waterfall view</text>
+
+  <rect class="zone-inner" x="610" y="790" width="170" height="150" rx="22"/>
+  <text class="box-title" x="695" y="840">Grafana</text>
+  <text class="box-sub" x="695" y="906">Explore view</text>
+
+  <!-- Component 4: Celery (x: 900..1640) - gap centered exactly at Redis center x=1280 -->
+  <rect class="zone-outer" x="900" y="720" width="740" height="240" rx="32"/>
+  <text class="zone-title" x="1270" y="758">Celery</text>
+
+  <rect class="zone-inner" x="930" y="790" width="320" height="150" rx="22"/>
+  <text class="box-title" x="1090" y="840">Worker 1</text>
+  <text class="box-sub" x="1090" y="878">send email</text>
+
+  <rect class="zone-inner" x="1310" y="790" width="310" height="150" rx="22"/>
+  <text class="box-title" x="1465" y="840">Worker 2</text>
+  <text class="box-sub" x="1465" y="878">generate pdf</text>
+
+  <!-- ============================================================ -->
+  <!-- ARROWS + inline commands                                     -->
+  <!-- Top-row horizontals + Celery->Tempo + cross-row connectors    -->
+  <!-- ============================================================ -->
+
+  <!-- 1: Client -> Flask (right, big gap x=400..600) -->
+  <line class="edge" x1="402" y1="290" x2="598" y2="290" marker-end="url(#arr)"/>
+  <text class="cmd" x="500" y="278">POST /task</text>
+
+  <!-- 6: Flask -> Client (left, response) -->
+  <line class="edge" x1="598" y1="500" x2="402" y2="500" marker-end="url(#arr)"/>
+  <text class="cmd" x="500" y="488">Response</text>
+
+  <!-- 2: Flask -> Redis Broker (right, big gap x=920..1120) -->
+  <line class="edge" x1="922" y1="280" x2="1118" y2="280" marker-end="url(#arr)"/>
+  <text class="cmd" x="1020" y="268">Push Task</text>
+
+  <!-- 5: Redis Result Backend -> Flask (left) -->
+  <line class="edge" x1="1118" y1="530" x2="922" y2="530" marker-end="url(#arr)"/>
+  <text class="cmd" x="1020" y="550">Get Status</text>
+
+  <!-- 3: Redis Broker (DB 0) -> Celery zone (exits right, drops down at x=1520, enters Celery top from above at gap) -->
+  <!-- Vertical at x=1520, horizontal at y=720 going left into Celery top at (1280, 720) -->
+  <path class="edge" d="M 1410 260 L 1520 260 L 1520 720 L 1280 720" marker-end="url(#arr)"/>
+  <text class="cmd" x="1550" y="450">Pull Task</text>
+
+  <!-- 4: Celery zone -> Redis Result Backend (DB 1) (short: exits Redis Result Backend right, drops just outside at x=1450, into Celery top via short jog) -->
+  <!-- Exit Redis Result Backend right at (1410, 530), right to x=1450, down to y=750, left into Celery at (1300, 750) -->
+  <path class="edge" d="M 1410 530 L 1450 530 L 1450 750 L 1300 750" marker-end="url(#arr)"/>
+  <text class="cmd" x="1480" y="630">Store Result</text>
+
+  <!-- 7: Celery -> Tempo (left, across bottom row gap x=800..900) -->
+  <line class="edge" x1="898" y1="865" x2="802" y2="865" marker-end="url(#arr)"/>
+  <text class="cmd" x="850" y="853">export</text>
 </svg>

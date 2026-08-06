@@ -1,92 +1,159 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" font-family="Inter, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1300" viewBox="0 0 1900 1300" font-family="Inter, Helvetica, Arial, sans-serif">
   <style>
-    @keyframes dash-flow { to { stroke-dashoffset: 0; } }
-    .title { font-size: 30px; font-weight: 700; fill: #172033; text-anchor: middle; }
-    .role { font-size: 14px; font-style: italic; fill: #64748b; text-anchor: middle; }
-    .edge-label { font-size: 15px; font-weight: 600; fill: #475569; text-anchor: middle; }
-    .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
+    @keyframes flow { to { stroke-dashoffset: 0; } }
+    .diagram-title { font-size: 26px; font-weight: 600; fill: #172033; text-anchor: middle; }
+    .zone-title { font-size: 18px; font-weight: 600; fill: #172033; text-anchor: middle; }
+    .box-title { font-size: 18px; font-weight: 600; fill: #172033; text-anchor: middle; }
+    .box-sub { font-size: 14px; fill: #475569; text-anchor: middle; }
+    .cmd { font-size: 14px; font-weight: 600; fill: #1e3a8a; text-anchor: middle; }
+    .zone { fill: #dbeafe; stroke: #93c5fd; stroke-width: 1.5; }
+    .box { fill: #bfdbfe; stroke: #60a5fa; stroke-width: 1.5; }
     .edge {
-      stroke: #475569;
-      stroke-width: 4;
+      stroke: #1e3a8a;
+      stroke-width: 2;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 12 10;
-      stroke-dashoffset: -22;
-      animation: dash-flow 800ms linear infinite;
+      stroke-dasharray: 9 7;
+      stroke-dashoffset: -16;
+      animation: flow 700ms linear infinite;
       fill: none;
     }
   </style>
   <defs>
-    <marker id="arr" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M0 0 L12 6 L0 12 Z" fill="#475569"/></marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#1e3a8a"/></marker>
   </defs>
 
-  <rect width="1500" height="760" fill="#ffffff"/>
-  <text class="title" x="750" y="52">End-to-End Trace: Flask → Celery → Tempo → Grafana</text>
+  <rect width="1900" height="1300" fill="#ffffff"/>
+  <text class="diagram-title" x="950" y="50">End-to-End Trace: Flask → Celery → Tempo → Grafana</text>
 
-  <!-- Client -->
-  <g transform="translate(85,160)">
-    <rect class="box" width="250" height="190" rx="24"/>
-    <g transform="translate(105,30)">
-      <rect width="40" height="32" rx="4" fill="#0f172a"/>
-      <text x="6" y="22" fill="#22c55e" font-family="monospace" font-size="14">&gt;_</text>
-    </g>
-    <text class="role" x="125" y="120">POST /process</text>
-  </g>
+  <!-- ============================================================ -->
+  <!-- LAYOUT — all rows centered horizontally                       -->
+  <!-- Canvas width 1900                                              -->
+  <!--                                                               -->
+  <!-- TOP ROW (4 boxes, 240 wide, 100 gap):                         -->
+  <!--   total = 240*4+100*3 = 1260                                   -->
+  <!--   start x = (1900-1260)/2 = 320                                -->
+  <!--   curl      320..560                                            -->
+  <!--   flask     660..900                                            -->
+  <!--   redis     1000..1240                                          -->
+  <!--   celery    1340..1580                                          -->
+  <!--                                                               -->
+  <!-- MIDDLE ROW Tempo (3 boxes, 280 wide, 100 gap):                -->
+  <!--   total = 280*3+100*2 = 1040                                   -->
+  <!--   start x = (1900-1040)/2 = 430                                -->
+  <!--   distributor 430..710                                          -->
+  <!--   storage     810..1090                                         -->
+  <!--   query api   1190..1470                                        -->
+  <!--                                                               -->
+  <!-- BOTTOM ROW Grafana (4 boxes):                                 -->
+  <!--   3 boxes (280 wide, 100 gap) + 1 wide box (480 wide)         -->
+  <!--   total = 280*3+100*2 + 480 + 200(rightmargin-from-endbox)   -->
+  <!--       = 1040 + 480 + 200 = 1720                                -->
+  <!--   Alternative: 4 boxes (280 wide) = 1420 total                 -->
+  <!--   start x for 4 boxes 280 wide: (1900-1420)/2 = 240            -->
+  <!-- ============================================================ -->
 
-  <!-- Flask -->
-  <g transform="translate(615,160)">
-    <rect class="box" width="270" height="190" rx="24"/>
-    <image href="./logos/flask-wordmark.svg" x="35" y="50" width="200" height="70"/>
-    <text class="role" x="135" y="160">X-Trace-ID</text>
-  </g>
+  <!-- Top zone background (full width for visual band) -->
+  <rect class="zone" x="280" y="100" width="1340" height="280" rx="28"/>
+  <text class="zone-title" x="950" y="135">Application services</text>
 
-  <!-- Redis -->
-  <g transform="translate(1175,160)">
-    <rect class="box" width="240" height="190" rx="24"/>
-    <image href="./logos/redis.svg" x="60" y="25" width="120" height="120"/>
-    <text class="role" x="120" y="170">broker</text>
-  </g>
+  <!-- curl client -->
+  <rect class="box" x="320" y="160" width="240" height="180" rx="22"/>
+  <text class="box-title" x="440" y="240">curl client</text>
+  <text class="box-sub" x="440" y="270">POST /process</text>
 
-  <!-- Grafana -->
-  <g transform="translate(85,500)">
-    <rect class="box" width="250" height="200" rx="24"/>
-    <image href="./logos/grafana-wordmark.svg" x="30" y="50" width="190" height="35"/>
-    <image href="./logos/grafana-icon.svg" x="109" y="92" width="32" height="32"/>
-    <text class="role" x="125" y="170">waterfall + service graph</text>
-  </g>
+  <!-- flask-api -->
+  <rect class="box" x="660" y="160" width="240" height="180" rx="22"/>
+  <text class="box-title" x="780" y="240">flask-api</text>
+  <text class="box-sub" x="780" y="270">HTTP entrypoint</text>
 
-  <!-- Tempo -->
-  <g transform="translate(615,500)">
-    <rect class="box" width="270" height="200" rx="24"/>
-    <image href="./logos/tempo.svg" x="65" y="30" width="140" height="110"/>
-    <text class="role" x="135" y="175">indexed by trace ID</text>
-  </g>
+  <!-- redis -->
+  <rect class="box" x="1000" y="160" width="240" height="180" rx="22"/>
+  <text class="box-title" x="1120" y="240">redis</text>
+  <text class="box-sub" x="1120" y="270">broker + result</text>
 
-  <!-- Celery worker -->
-  <g transform="translate(1175,500)">
-    <rect class="box" width="240" height="200" rx="24"/>
-    <image href="./logos/celery.png" x="60" y="25" width="120" height="120"/>
-    <text class="role" x="120" y="175">celery-process</text>
-  </g>
+  <!-- celery-worker -->
+  <rect class="box" x="1340" y="160" width="240" height="180" rx="22"/>
+  <text class="box-title" x="1460" y="240">celery-worker</text>
+  <text class="box-sub" x="1460" y="270">celery-process</text>
 
-  <line class="edge" x1="337" y1="255" x2="613" y2="255" marker-end="url(#arr)"/>
-  <rect x="442" y="225" width="66" height="30" rx="15" fill="#ffffff"/>
-  <text class="edge-label" x="475" y="245">HTTP</text>
+  <!-- Tempo zone background -->
+  <rect class="zone" x="390" y="430" width="1120" height="280" rx="28"/>
+  <text class="zone-title" x="950" y="465">Tempo</text>
 
-  <line class="edge" x1="887" y1="255" x2="1173" y2="255" marker-end="url(#arr)"/>
-  <rect x="982" y="225" width="92" height="30" rx="15" fill="#ffffff"/>
-  <text class="edge-label" x="1028" y="245">enqueue</text>
+  <rect class="box" x="430" y="490" width="280" height="180" rx="22"/>
+  <text class="box-title" x="570" y="555">tempo-distributor</text>
+  <text class="box-sub" x="570" y="585">:4318 ingester</text>
+  <text class="box-sub" x="570" y="615">trace collection</text>
 
-  <line class="edge" x1="1295" y1="352" x2="1295" y2="498" marker-end="url(#arr)"/>
-  <rect x="1232" y="406" width="126" height="30" rx="15" fill="#ffffff"/>
-  <text class="edge-label" x="1295" y="427">pick up task</text>
+  <rect class="box" x="810" y="490" width="280" height="180" rx="22"/>
+  <text class="box-title" x="950" y="555">Tempo storage</text>
+  <text class="box-sub" x="950" y="585">local trace backend</text>
+  <text class="box-sub" x="950" y="615">index by trace ID</text>
 
-  <line class="edge" x1="1173" y1="600" x2="887" y2="600" marker-end="url(#arr)"/>
-  <rect x="982" y="572" width="92" height="30" rx="15" fill="#ffffff"/>
-  <text class="edge-label" x="1028" y="592">export</text>
+  <rect class="box" x="1190" y="490" width="280" height="180" rx="22"/>
+  <text class="box-title" x="1330" y="555">Query API</text>
+  <text class="box-sub" x="1330" y="585">:3200</text>
+  <text class="box-sub" x="1330" y="615">trace lookup</text>
 
-  <line class="edge" x1="613" y1="600" x2="337" y2="600" marker-end="url(#arr)"/>
-  <rect x="426" y="572" width="98" height="30" rx="15" fill="#ffffff"/>
-  <text class="edge-label" x="475" y="592">query</text>
+  <!-- Grafana zone background -->
+  <rect class="zone" x="240" y="760" width="1420" height="280" rx="28"/>
+  <text class="zone-title" x="950" y="795">Grafana Explore</text>
+
+  <rect class="box" x="280" y="820" width="280" height="180" rx="22"/>
+  <text class="box-title" x="420" y="885">service graph</text>
+  <text class="box-sub" x="420" y="915">node + edge metrics</text>
+
+  <rect class="box" x="660" y="820" width="280" height="180" rx="22"/>
+  <text class="box-title" x="800" y="885">waterfall view</text>
+  <text class="box-sub" x="800" y="915">span timeline</text>
+
+  <rect class="box" x="1040" y="820" width="280" height="180" rx="22"/>
+  <text class="box-title" x="1180" y="885">trace search</text>
+  <text class="box-sub" x="1180" y="915">by trace ID</text>
+
+  <rect class="box" x="1380" y="820" width="240" height="180" rx="22"/>
+  <text class="box-title" x="1500" y="885">end-to-end</text>
+  <text class="box-sub" x="1500" y="915">visualization</text>
+
+  <!-- ============================================================ -->
+  <!-- EDGES (clean straight lines + simple L-shapes)                -->
+  <!-- ============================================================ -->
+
+  <!-- 1: curl -> flask (right, y=240) -->
+  <line class="edge" x1="562" y1="240" x2="658" y2="240" marker-end="url(#arr)"/>
+  <text class="cmd" x="610" y="228">HTTP POST</text>
+
+  <!-- 2: flask -> redis (right, enqueue, y=240) -->
+  <line class="edge" x1="902" y1="240" x2="998" y2="240" marker-end="url(#arr)"/>
+  <text class="cmd" x="950" y="228">enqueue</text>
+
+  <!-- 3: redis -> celery (right, pull task, y=220, upper corridor) -->
+  <line class="edge" x1="1242" y1="220" x2="1338" y2="220" marker-end="url(#arr)"/>
+  <text class="cmd" x="1290" y="208">pull task</text>
+
+  <!-- 4: celery -> redis (left, store result, y=290, lower corridor) -->
+  <line class="edge" x1="1338" y1="290" x2="1242" y2="290" marker-end="url(#arr)"/>
+  <text class="cmd" x="1290" y="312">store result</text>
+
+  <!-- 5: flask -> tempo-distributor (straight down at x=780) -->
+  <line class="edge" x1="780" y1="342" x2="780" y2="488" marker-end="url(#arr)"/>
+  <text class="cmd" x="815" y="420">export</text>
+
+  <!-- 6: celery -> tempo-distributor (down at x=1460, then left along y=400, then down) -->
+  <path class="edge" d="M 1460 342 L 1460 400 L 570 400 L 570 488" marker-end="url(#arr)"/>
+  <text class="cmd" x="1010" y="388">export</text>
+
+  <!-- 7: redis -> tempo-distributor (down at x=1120, then left along y=400, then down) -->
+  <path class="edge" d="M 1120 342 L 1120 400 L 620 400 L 620 488" marker-end="url(#arr)"/>
+  <text class="cmd" x="870" y="388">export</text>
+
+  <!-- 8: Tempo storage -> Query API (right, internal, y=580) -->
+  <line class="edge" x1="1092" y1="580" x2="1188" y2="580" marker-end="url(#arr)"/>
+  <text class="cmd" x="1140" y="568">lookup</text>
+
+  <!-- 9: Query API -> Grafana waterfall (straight down at x=1330) -->
+  <line class="edge" x1="1330" y1="672" x2="1330" y2="818" marker-end="url(#arr)"/>
+  <text class="cmd" x="1365" y="755">query</text>
 </svg>
